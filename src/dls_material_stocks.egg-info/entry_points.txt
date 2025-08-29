@@ -1,0 +1,2 @@
+[console_scripts]
+dls-analyze = dls_material_stocks.cli.main:main
