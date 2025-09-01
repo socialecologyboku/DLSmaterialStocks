@@ -209,7 +209,7 @@ scenarios_to_run = [
     "current_combined",
 ]
 
-create_scenario_data(scenarios_to_run, input_path=input_path)
+#create_scenario_data(scenarios_to_run, input_path=input_path)
 
 
 
@@ -284,7 +284,7 @@ decomposition_scenarios_to_run = [
     "current_same_combined_not_school",
 ]
 
-create_scenario_data(decomposition_scenarios_to_run, input_path=input_path)
+#create_scenario_data(decomposition_scenarios_to_run, input_path=input_path)
 
 
 

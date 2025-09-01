@@ -1188,6 +1188,7 @@ def run_analysis(
     # Convert to a single DataFrame
     regio_stocks = pd.concat(regio_stock_dict, axis=1)
     regio_stocks.columns = regio_stocks.columns.droplevel(1)
+    
     #! for some regions, cross-sectional trickle down stocks are smaller than already existing stocks leading to negative 'gap trickle' --> set zero
     if not conv_gap_mode:
         regio_stocks[regio_stocks < 0] = 0
@@ -1238,7 +1239,8 @@ def run_analysis(
             "gap_trickle": "gap_trickle_cap",
         }
     )
-    ## global_stocks will be different from global_stocks_prod (below) because of setting negative beyond DLS stocks to 0 - these negatives are more when including the dimensions products
+    
+    ##! global_stocks will be different from global_stocks_prod (below) because of setting negative beyond DLS stocks to 0 - these negatives are more when including the dimensions products
 
 
 
@@ -1334,10 +1336,7 @@ def run_analysis(
     regio_stock_prod_cap = regio_stock_prod_cap.iloc[:, 13:25]
 
     # check if correct against regio_stocks_cap
-    
-
-    
-    # import numpy as np
+    ##! regio_stocks (per cap) will be different from regio_stock_prod (per cap) (below) because of setting negative beyond DLS stocks to 0 - these negatives are more when including the dimensions products
     # rssum = regio_stock_prod_cap.sum().sum()
     # rescsum = regio_stocks_cap.sum().sum()
     #print(f"Regio stock prod cap sum: {rssum} vs {rescsum}")
@@ -1431,8 +1430,6 @@ def run_analysis(
         ["region", "dimension", "stock", "material"], inplace=True
     )
 
-    # check that equivalent to regio_stock_prod.groupby('sector').sum() (as we cannot calculate beyond DLS stocks per DLS dimension and thus not take this one as base df)
-    # regio_stock_prod_dim.groupby('sector').sum()
 
     # calculate global stock items per capita (t/cap)
     regio_stock_prod_dim_cap = regio_stock_prod_dim.copy()
@@ -1443,23 +1440,13 @@ def run_analysis(
         regio_stock_prod_dim_cap[(col[0] + "_cap", col[1])] = regio_stock_prod_dim_cap[
             col
         ] / (regio_stock_prod_dim_cap["population"] * 1000)
+        
     # only keep columns with per capita values
     # TODO are we sure these are correct columns?
     regio_stock_prod_dim_cap = regio_stock_prod_dim_cap.iloc[:, 9:17]
 
-    # check if correct against regio_stocks_cap
-    # regio_stock_prod_dim_cap.groupby('region').sum()
-
-    # check that regional, global and diff dimensional resolutions come to same result
-    # global_stocks and regio_Stocks
-    # global and regional correspondence per resolution pairs
-
-    #print(f"GS vs RS: {global_stocks} vs {regio_stocks.groupby('material').sum()}")
-    #print(f"GSPD vs RGSPD: {global_stock_prod} vs {regio_stock_prod.groupby('sector').sum()}")
-    #assert np.isclose(global_stocks, regio_stocks.groupby("material").sum()) is True, "global and regional results do not match"
-    #assert np.isclose(global_stock_prod, regio_stock_prod.groupby("sector").sum()) is True, "global and regional results do not match"
-    # over resolution pairs
-    # these match
+    ##! regio_stocks_prod (per cap) will be different from regio_stock_prod_dim (per cap) (below) because of setting negative beyond DLS stocks to 0 - these negatives are more when including the dimensions products
+    
     global_stocks_prod_dim = regio_stock_prod_dim.groupby(["dimension", "sector"]).sum()
 
     aggr_dim = {
@@ -2923,8 +2910,6 @@ def run_analysis(
 
     ## add economy-wide stocks to bar plot Fig 2B
     # format dataframe
-
-    # TODO We indented this, where does this go?
 
         distr_df_wconverge_save = (
             distribution_df[

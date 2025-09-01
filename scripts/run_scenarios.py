@@ -80,15 +80,18 @@ def run_scenario_analysis(
 
         print(f"Running analysis for scenario: {scenario_key}")
 
-        provided_path = Path(scenario_info["output_files"]["provided"] + ".pkl")
-        threshold_path = Path(scenario_info["output_files"]["threshold"] + ".pkl")
+        if provided_path == None:
+            provided_path = Path(scenario_info["output_files"]["provided"] + ".pkl")
+        
+        if threshold_path == None:
+            threshold_path = Path(scenario_info["output_files"]["threshold"] + ".pkl")
 
         DLS_stocks_prov = pd.read_pickle(provided_path)
         DLS_stocks_thresh = pd.read_pickle(threshold_path)
 
         if DLS_stocks_thresh_converge is not None:
             DLS_stocks_thresh_converge = pd.read_pickle(
-                str(DLS_stocks_thresh_converge) + ".pkl"
+                str(DLS_stocks_thresh_converge) 
             )
 
         # TODO the .pkl suffix should be added in creation, not here
@@ -119,7 +122,8 @@ def run_scenario_analysis(
             print(traceback.format_exc())
             
 
-# use this function if only interested to calculate thresholds (avoids negative gaps if thresholds lower than current provision in scenarios)
+# use this function if only interested to calculate thresholds 
+# (avoids negative gaps if thresholds lower than current provision in scenarios)
 def run_scenario_analysis_threshOnly(
     data_path,
     DLS_stocks_thresh_converge=None,
@@ -155,15 +159,18 @@ def run_scenario_analysis_threshOnly(
 
         print(f"Running analysis for scenario: {scenario_key}")
 
-        provided_path = Path(scenario_info["output_files"]["provided"] + ".pkl")
-        threshold_path = Path(scenario_info["output_files"]["threshold"] + ".pkl")
+        if provided_path == None:
+            provided_path = Path(scenario_info["output_files"]["provided"] + ".pkl")
+        
+        if threshold_path == None:
+            threshold_path = Path(scenario_info["output_files"]["threshold"] + ".pkl")
 
         DLS_stocks_prov = pd.read_pickle(provided_path)
         DLS_stocks_thresh = pd.read_pickle(threshold_path)
 
         if DLS_stocks_thresh_converge is not None:
             DLS_stocks_thresh_converge = pd.read_pickle(
-                str(DLS_stocks_thresh_converge) + ".pkl"
+                str(DLS_stocks_thresh_converge) 
             )
 
         # TODO the .pkl suffix should be added in creation, not here
@@ -199,7 +206,7 @@ def get_data_path(meta_data_path, scenario_name, data_name="threshold"):
         raise ValueError(f"Uknown type of data: {data_name}")
     metadata = load_scenario_metadata(meta_data_path)
     scenario_info = metadata[scenario_name]
-    return Path(scenario_info["output_files"][data_name])
+    return scenario_info["output_files"][data_name] + '.pkl'
 
 
 if __name__ == "__main__":
@@ -226,32 +233,20 @@ if __name__ == "__main__":
     # # negatives, only to produce the trajectories for figure5c in main manuscript
     
     
-    ## currently yields same results as normal  run?
-    
     converge_DLS_stocks_thresh = get_data_path(
         scenarios_data_path, "converged", "threshold"
     )
 
+    
     # run_scenario_analysis(
     #     data_path=scenarios_data_path,
     #     scenario_names=["current"],
     #     threshold_path=converge_DLS_stocks_thresh,
     #     converge=None,
-    #     DLS_stocks_thresh_converge=converge_DLS_stocks_thresh,
     #     output_suffix="gapConverged",
     #     conv_gap_mode=True,
     #     save_results=["Cover","Fig5c_closeGap_Glob_curr", "Fig5c_closeGap_Reg_curr"]
     # )
-    
-    run_scenario_analysis(
-        data_path=scenarios_data_path,
-        scenario_names=["current"],
-        threshold_path=converge_DLS_stocks_thresh,
-        converge=None,
-        output_suffix="gapConverged",
-        conv_gap_mode=True,
-        save_results=["Cover","Fig5c_closeGap_Glob_curr", "Fig5c_closeGap_Reg_curr"]
-    )
 
 
 
