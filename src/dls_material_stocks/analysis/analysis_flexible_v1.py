@@ -1069,9 +1069,12 @@ def run_analysis(
     DLS_stocks_prov_noMats_regio_scale_materials = (
         DLS_stocks_prov_noMats_regio_scale.groupby(["region", "material"]).sum()
     )
+    
+
+    # clip zero here so that dictionaries regio_stocks ad regio_stock_prod are consistent (both derived from bDLS stocks calculated at resolution of reg x mat x prod)
     Beyond_DLS_stocks_regio_scale_materials = (
         pd.melt(
-            Beyond_DLS_stocks_R11_piv.reset_index(),
+            Beyond_DLS_stocks_R11_piv.clip(0).reset_index(),
             id_vars=["region", "sector"],
             value_vars=["biomass", "fossils", "metals", "minerals"],
             var_name="material",
@@ -1081,15 +1084,31 @@ def run_analysis(
         .groupby(["region", "material"])
         .sum()
     )
+    
+    # count negative values and mass before clipping negatives
+    Beyond_DLS_stocks_regio_scale_materials_count_neg = (
+        pd.melt(
+            Beyond_DLS_stocks_R11_piv.clip(0).reset_index(),
+            id_vars=["region", "sector"],
+            value_vars=["biomass", "fossils", "metals", "minerals"],
+            var_name="material",
+            value_name="value",
+        )
+        .set_index(["region", "sector", "material"])
+        .groupby(["region", "material"])
+        .sum()
+    )
+    
+    
 
     ##! beyond DLS stocks negative for some materials because top-down estimate of total stocks larger than bottom-up estimate of existing DLS stocks
     # negatives in terms of count and mass
-    negative_count_bDLS_RM = (Beyond_DLS_stocks_regio_scale_materials < 0).sum().sum()
-    total_count_bDLS_RM = Beyond_DLS_stocks_regio_scale_materials.size
+    negative_count_bDLS_RM = (Beyond_DLS_stocks_regio_scale_materials_count_neg < 0).sum().sum()
+    total_count_bDLS_RM = Beyond_DLS_stocks_regio_scale_materials_count_neg.size
     negative_mass_bDLS_RM = (
         (
-            Beyond_DLS_stocks_regio_scale_materials[
-                Beyond_DLS_stocks_regio_scale_materials < 0
+            Beyond_DLS_stocks_regio_scale_materials_count_neg[
+                Beyond_DLS_stocks_regio_scale_materials_count_neg < 0
             ]
         )
         .sum()
@@ -1097,8 +1116,8 @@ def run_analysis(
     )
     positive_mass_bDLS_RM = (
         (
-            Beyond_DLS_stocks_regio_scale_materials[
-                Beyond_DLS_stocks_regio_scale_materials > 0
+            Beyond_DLS_stocks_regio_scale_materials_count_neg[
+                Beyond_DLS_stocks_regio_scale_materials_count_neg > 0
             ]
         )
         .sum()
@@ -1108,8 +1127,8 @@ def run_analysis(
         negative_mass_bDLS_RM / positive_mass_bDLS_RM * 100
     )
     # we set negative values to zero here, implying that the regional ratio of existing DLS and beyond DLS stocks is 1 and thus no beyond-DLS stock is built in 'regional ratios' scenario
-    Beyond_DLS_stocks_regio_scale_materials[
-        Beyond_DLS_stocks_regio_scale_materials < 0
+    Beyond_DLS_stocks_regio_scale_materials_count_neg[
+        Beyond_DLS_stocks_regio_scale_materials_count_neg < 0
     ] = 0
 
     # calculate additional beyond-DLS stocks that would be added if regional beyond-DLS ratios are built in the future
@@ -1240,8 +1259,6 @@ def run_analysis(
         }
     )
     
-    ##! global_stocks will be different from global_stocks_prod (below) because of setting negative beyond DLS stocks to 0 - these negatives are more when including the dimensions products
-
 
 
     ### 2) REGIONAL - INCLUDING PRODUCTS DIMENSION
@@ -1335,13 +1352,11 @@ def run_analysis(
         )
     regio_stock_prod_cap = regio_stock_prod_cap.iloc[:, 13:25]
 
-    # check if correct against regio_stocks_cap
-    ##! regio_stocks (per cap) will be different from regio_stock_prod (per cap) (below) because of setting negative beyond DLS stocks to 0 - these negatives are more when including the dimensions products
-    # rssum = regio_stock_prod_cap.sum().sum()
-    # rescsum = regio_stocks_cap.sum().sum()
-    #print(f"Regio stock prod cap sum: {rssum} vs {rescsum}")
-    #assert np.isclose(rssum, rescsum) is True
-
+    # check if global_stocks and global_stock_prod are equal
+    print(global_stocks.sum(axis=0)/1e9)
+    print(global_stock_prod.groupby(level=0, axis=1).sum().sum(axis=0) / 1e9)
+    print(regio_stocks.groupby('region').sum()/1e9)
+    print(regio_stock_prod.groupby('region').sum().groupby(level=0, axis=1).sum() / 1e9)
 
 
     # 3) REGIONAL - INCLUDING PRODUCTS & DIMENSION
@@ -1445,8 +1460,7 @@ def run_analysis(
     # TODO are we sure these are correct columns?
     regio_stock_prod_dim_cap = regio_stock_prod_dim_cap.iloc[:, 9:17]
 
-    ##! regio_stocks_prod (per cap) will be different from regio_stock_prod_dim (per cap) (below) because of setting negative beyond DLS stocks to 0 - these negatives are more when including the dimensions products
-    
+
     global_stocks_prod_dim = regio_stock_prod_dim.groupby(["dimension", "sector"]).sum()
 
     aggr_dim = {
