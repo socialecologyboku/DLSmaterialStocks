@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 import matplotlib
 
-matplotlib.use("Agg")
+#matplotlib.use("Agg")
 # Set non-interactive backend before importing pyplot. This prevents pyplot from opening plots
 # if you want to interactively explore those, comment out this line
 from dls_material_stocks.analysis.analysis_flexible_v1 import run_analysis
@@ -238,15 +238,15 @@ if __name__ == "__main__":
     )
 
     
-    # run_scenario_analysis(
-    #     data_path=scenarios_data_path,
-    #     scenario_names=["current"],
-    #     threshold_path=converge_DLS_stocks_thresh,
-    #     converge=None,
-    #     output_suffix="gapConverged",
-    #     conv_gap_mode=True,
-    #     save_results=["Cover","Fig5c_closeGap_Glob_curr", "Fig5c_closeGap_Reg_curr"]
-    # )
+    run_scenario_analysis(
+        data_path=scenarios_data_path,
+        scenario_names=["current"],
+        threshold_path=converge_DLS_stocks_thresh,
+        converge=None,
+        output_suffix="gapConverged",
+        conv_gap_mode=True,
+        save_results=["Cover","Fig5c_closeGap_Glob_curr", "Fig5c_closeGap_Reg_curr"]
+    )
 
 
 
@@ -257,7 +257,7 @@ if __name__ == "__main__":
    
    
    
-    ### Calculate DLSS with CURRENT practices + converged threshold estimate on top
+    ## Calculate DLSS with CURRENT practices + converged threshold estimate on top
     run_scenario_analysis(
         data_path=scenarios_data_path,
         scenario_names=["current"],
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
 
 
-    ### Calculate DLSS with CONVERGED practices ONLY FOR THRESHOLD EXTRACTION
+    ## Calculate DLSS with CONVERGED practices ONLY FOR THRESHOLD EXTRACTION
     run_scenario_analysis_threshOnly(
         scenarios_data_path,
         scenario_names=["converged"],
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     # DLS thresholds +/-25%, EW-MFA stock lifetimes +/-30%, and alternative building material intensities
 
 
-    ### 1a. DLS THRESHOLDS PLUS 25%
+    ## 1a. DLS THRESHOLDS PLUS 25%
     converge_DLS_stocks_thresh_plus = get_data_path(
         scenarios_data_path, "convergedDLSplus", "threshold"
     )
@@ -381,7 +381,7 @@ if __name__ == "__main__":
 
 
 
-    ### 2a. EW-MFA MISO2 stock LIFETIME LESS 30%
+    ## 2a. EW-MFA MISO2 stock LIFETIME LESS 30%
       
     # current practices for existing and threshold stocks + converged threshold estimate on top
     converge_DLS_stocks_thresh = get_data_path(

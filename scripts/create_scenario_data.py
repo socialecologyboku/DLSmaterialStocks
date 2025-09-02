@@ -209,7 +209,7 @@ scenarios_to_run = [
     "current_combined",
 ]
 
-#create_scenario_data(scenarios_to_run, input_path=input_path)
+create_scenario_data(scenarios_to_run, input_path=input_path)
 
 
 
@@ -284,7 +284,7 @@ decomposition_scenarios_to_run = [
     "current_same_combined_not_school",
 ]
 
-#create_scenario_data(decomposition_scenarios_to_run, input_path=input_path)
+create_scenario_data(decomposition_scenarios_to_run, input_path=input_path)
 
 
 
@@ -310,17 +310,13 @@ create_scenario_data(
 
 
 
+
+
 """ ### EW-MFA MISO2 stock LIFETIME +/-30% - is adapted in script run_scenarios.py ###"""
 
 
 
 """ ###  - Residential building MIs Pauliuk et al. (2021) ### """
-
-create_scenario_data(
-    scenarios_to_run=["current_recc_mi", "converged_recc_mi"],
-    input_path=input_path,
-    creation_function=calc_bottomUp_DLSS_RECCmi,
-)
 
 create_scenario_data(
     scenarios_to_run=["current_recc_mi", "converged_recc_mi"],

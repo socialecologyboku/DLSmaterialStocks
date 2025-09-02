@@ -978,106 +978,375 @@ def plot_stacked_bars_sub_geo(df1, df2, subcategory, title, DLS_stock_reached):
     # fig.savefig('Fig1a_DLSgapMap.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
     return combined_df
 
+## OLD
+# def plot_stacked_bars_sub_geo_converge(
+#     df1, df2, converge, subcategory, title, DLS_stock_reached
+# ):
+#     # subcategories is the label of the second index columns (besides 'region)
+#     grouped_df1 = df1.groupby(["region", subcategory]).sum()
+#     grouped_df2 = df2.groupby(["region", subcategory]).sum()
 
-def plot_stacked_bars_sub_geo_converge(
-    df1, df2, converge, subcategory, title, DLS_stock_reached
-):
+#     grouped_df1 = pd.DataFrame(grouped_df1.sum(axis=1)).rename(columns={0: "stock"})
+#     grouped_df2 = pd.DataFrame(grouped_df2.sum(axis=1)).rename(columns={0: "stock"})
+
+#     # Creating a single dataframe for plotting
+#     combined_df = pd.concat(
+#         [grouped_df1, grouped_df2, converge], axis=1, keys=["df1", "df2", "converge"]
+#     )
+#     combined_df.columns = combined_df.columns.map("_".join)
+#     combined_df = combined_df / 1e3  # t/cap now
+
+#     # Load a world map
+#     world = DLS_stock_reached
+#     # Remove Antarctica
+#     world = world[world["continent"] != "Antarctica"]
+
+#     # Create figure and axis for the map
+#     fig, ax = plt.subplots(figsize=(20, 12))
+
+#     import seaborn as sns
+#     from matplotlib.colors import LinearSegmentedColormap
+
+#     # Get a light blue palette from seaborn
+#     # light_blue_palette = sns.color_palette("Blues", 8)
+#     light_blue_palette = sns.color_palette("coolwarm", 3)[::-1]
+#     light_blue_cmap = LinearSegmentedColormap.from_list(
+#         "light_blue", light_blue_palette
+#     )
+
+#     light_blue_cmap = sns.dark_palette("#69d", as_cmap=True)
+#     light_blue_cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
+#     light_blue_cmap = sns.color_palette("ch:start=.1,rot=-.15", as_cmap=True)
+
+#     # Plot the world map
+#     world.plot(
+#         column="value_cap",
+#         ax=ax,
+#         cmap=light_blue_cmap,
+#         legend=False,
+#         edgecolor="black",
+#         zorder=0,
+#     )
+
+#     # Remove plot frame (axis spines)
+#     for spine in ax.spines.values():
+#         spine.set_visible(False)
+
+#     # Remove x and y labels from the map plot
+#     ax.set_xticks([])
+#     ax.set_yticks([])
+
+#     region_locations = {
+#         "AFR": (-27, -70),
+#         "CPA": (175, 10),
+#         "EEU": (18, 85 + 5),
+#         "FSU": (85, 80 + 5),
+#         "LAM": (-160, -5),
+#         "MEA": (-50, 8),
+#         "NAM": (-155, 72 + 5),
+#         "PAO": (165, 72 + 5),
+#         "PAS": (165, -55),
+#         "SAS": (60, -65),
+#         "WEU": (-45, 80 + 5),
+#     }
+
+#     region_full_names = {
+#         "AFR": "Sub-Saharan Africa",
+#         "CPA": "Centrally planned Asia",
+#         "EEU": "Eastern Europe",
+#         "FSU": "Former Soviet Union",
+#         "LAM": "Latin America",
+#         "MEA": "N. Africa & Middle East",
+#         "NAM": "North America",
+#         "PAO": "Japan, Australia, New Zealand",
+#         "PAS": "Pacific Asia",
+#         "SAS": "South Asia",
+#         "WEU": "Western Europe",
+#     }
+
+#     region_connections = {
+#         "AFR": (30, 0),
+#         "CPA": (95, 35),
+#         "EEU": (23, 55),
+#         "FSU": (95, 70),
+#         "LAM": (-80, -10),
+#         "MEA": (25, 25),
+#         "NAM": (-100, 60),
+#         "PAO": (145, 55),
+#         "PAS": (115, 5),
+#         "SAS": (75, 30),
+#         "WEU": (5, 50),
+#     }
+
+#     # Unique regions and dimensions for plotting
+#     regions = combined_df.index.get_level_values(0).unique()
+#     dimensions = combined_df.index.get_level_values(1).unique()
+
+#     # Colors for df1 using a distinct colormap
+#     colors_df1 = plt.cm.tab20(np.linspace(0, 1, len(dimensions)))
+#     colors_df2 = plt.cm.Reds(np.linspace(0.5, 1, len(dimensions)))
+
+#     # Legend handles
+#     legend_handles = [
+#         plt.Rectangle((0, 0), 1, 1, facecolor=color, edgecolor="black")
+#         for color in colors_df1
+#     ] + [plt.Rectangle((0, 0), 1, 1, facecolor="white", edgecolor="black")]
+#     legend_handles.append(
+#         Line2D([0, 1], [0, 0], color="red", marker="+", markersize=8, linewidth=0)
+#     )
+#     # Width of each bar
+#     width = 0.35  # Adjusted for two bars side by side
+
+#     # Transform coordinates to figure space
+#     trans = ax.transData.transform
+#     inv = fig.transFigure.inverted().transform
+
+#     # Plot bar charts at each region's location
+#     for region in regions:
+#         if region in region_locations and region in region_connections:
+#             # Transform region location to figure space
+#             x_fig, y_fig = inv(trans(region_locations[region]))
+
+#             # Create a new axis at this location
+#             region_ax = fig.add_axes(
+#                 [x_fig, y_fig, 0.06, 0.125]
+#             )  # Adjust size as needed
+
+#             # Add a title to each region's bar plot
+#             region_ax.set_title(
+#                 split_title(region_full_names.get(region)), fontsize=13, loc="center"
+#             )
+
+#             # Plotting
+#             for j, dimension in enumerate(dimensions):
+#                 df1_value = combined_df.loc[(region, dimension), "df1_stock"]
+#                 df2_value = combined_df.loc[(region, dimension), "df2_stock"]
+#                 df_grandf = combined_df.loc[(region, dimension), "converge_value_cap"]
+
+#                 # set negatives to zero (negatives occur in case the DLS stock threshold with practice changes is lower than DLS stocks in 2015)
+#                 df2_value = df2_value[df2_value > 0]
+
+#                 # Plot df1 value
+#                 region_ax.bar(
+#                     j, df1_value, color=colors_df1[j], edgecolor="black", zorder=2
+#                 )
+
+#                 # Plot df2 value as part of the stack on top of df1
+#                 region_ax.bar(
+#                     j,
+#                     df2_value,
+#                     bottom=df1_value,
+#                     color="white",
+#                     edgecolor="black",
+#                     zorder=2,
+#                 )
+
+#                 # plot line for converge threshold
+#                 region_ax.plot(
+#                     [j, j],
+#                     [df_grandf, df_grandf],
+#                     marker="+",
+#                     color="red",
+#                     linewidth=0,
+#                     zorder=3,
+#                     markeredgewidth=1,
+#                 )
+#                 # region_ax.plot([j - 0.35, j + 0.35], [df_grandf, df_grandf], marker= '*', color='black', linewidth=0, zorder=3)
+
+#             # Correct y-ticks for each region's bar plot
+#             max_value = (
+#                 combined_df.loc[region, combined_df.columns[:2]].sum(axis=1).max()
+#             )
+#             region_ax.set_yticks(
+#                 np.round(np.linspace(0, max_value, 5))
+#             )  # Adjust number of ticks as needed
+#             region_ax.set_ylabel("t/cap", fontsize=14)
+#             region_ax.yaxis.set_tick_params(labelsize=12)
+
+#             region_ax.set_ylim(0, max_value * 1.1)
+
+#             region_ax.set_xticks([])
+
+#             # Get connection line end points
+#             line_end = trans(
+#                 region_connections[region]
+#             )  # Country location in figure space
+#             line_end_fig = inv(line_end)
+
+#             # Draw first part of the line on the main map (ax)
+#             con_line_main = plt.Line2D(
+#                 [line_end_fig[0], x_fig + 0.05],
+#                 [line_end_fig[1], y_fig + 0.05],
+#                 transform=fig.transFigure,
+#                 color="black",
+#                 zorder=0,  # Set zorder to 0
+#             )
+#             ax.add_line(con_line_main)  # Add the line to the main map (ax)
+
+#             # Draw second part of the line on the region axis (region_ax)
+#             con_line_region = plt.Line2D(
+#                 [0, 0.05],
+#                 [0, 0.05],
+#                 transform=region_ax.transAxes,
+#                 color="black",
+#                 zorder=1,  # Set zorder to -1
+#             )
+#             region_ax.add_line(
+#                 con_line_region
+#             )  # Add the line to the region axis (region_ax)
+
+#     # Corresponding labels for the legend handles
+#     legend_labels = [
+#         "..existing, health",
+#         "..existing, mobility",
+#         "..existing, nutrition",
+#         "..existing, shelter",
+#         "..existing, socialization",
+#     ]  # Add labels for the Rectangle objects
+#     legend_labels.extend(
+#         ["..to close DLS gaps: current practices"]
+#     )  # Add labels for the Line2D objects
+#     legend_labels.extend(
+#         ["..to close DLS gaps: converged practices"]
+#     )  # Add labels for the Line2D objects
+#     # Create the legend with both Rectangle and Line2D entries
+#     legend = ax.legend(
+#         handles=legend_handles,
+#         labels=legend_labels,
+#         title="DLS material stocks (Ø per capita)..",
+#         loc="lower left",
+#         bbox_to_anchor=(0.05, -0.095),
+#         fontsize=14,
+#         frameon=False,
+#     )
+#     legend._legend_box.align = "left"
+#     plt.setp(legend.get_title(), fontsize="14", color="black", weight="normal")
+#     ax.set_title(title, fontsize=30, pad=160, x=0.55)
+#     # Add color bar for country values under the map
+#     sm = plt.cm.ScalarMappable(cmap=light_blue_cmap, norm=plt.Normalize(vmin=0, vmax=1))
+#     cbar_ax = fig.add_axes(
+#         [0.17, 0.145, 0.76, 0.02]
+#     )  # Adjust position and size as needed
+#     cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
+#     cbar.ax.tick_params(labelsize=15)
+#     cbar.ax.text(
+#         0,
+#         1.8,
+#         "No DLS material stocks",
+#         verticalalignment="center",
+#         transform=cbar_ax.transAxes,
+#         fontsize=16,
+#     )
+#     cbar.ax.text(
+#         0.85,
+#         1.8,
+#         "DLS material stocks",
+#         verticalalignment="center",
+#         transform=cbar_ax.transAxes,
+#         fontsize=16,
+#     )
+#     cbar.ax.text(
+#         0.26,
+#         0.37,
+#         "DLS stocks reached = (existing DLS stocks / DLS stock threshold)",
+#         verticalalignment="center",
+#         transform=cbar_ax.transAxes,
+#         fontsize=16,
+#         color="white",
+#     )
+#     cbar.set_ticklabels([f"{int(100 * x)}%" for x in np.linspace(0, 1, 6)])
+#     plt.show()
+#     # fig.savefig('Fig1a_DLSgapMap.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
+#     return combined_df
+
+
+
+
+def plot_stacked_bars_sub_geo_converge(df1, df2, converge, subcategory, title, DLS_stock_reached):
     # subcategories is the label of the second index columns (besides 'region)
-    grouped_df1 = df1.groupby(["region", subcategory]).sum()
-    grouped_df2 = df2.groupby(["region", subcategory]).sum()
+    grouped_df1 = df1.groupby(['region', subcategory]).sum()
+    grouped_df2 = df2.groupby(['region', subcategory]).sum()
 
-    grouped_df1 = pd.DataFrame(grouped_df1.sum(axis=1)).rename(columns={0: "stock"})
-    grouped_df2 = pd.DataFrame(grouped_df2.sum(axis=1)).rename(columns={0: "stock"})
+    grouped_df1 = pd.DataFrame(grouped_df1.sum(axis=1)).rename(columns ={0:'stock'})
+    grouped_df2 = pd.DataFrame(grouped_df2.sum(axis=1)).rename(columns ={0:'stock'})
 
     # Creating a single dataframe for plotting
-    combined_df = pd.concat(
-        [grouped_df1, grouped_df2, converge], axis=1, keys=["df1", "df2", "converge"]
-    )
-    combined_df.columns = combined_df.columns.map("_".join)
-    combined_df = combined_df / 1e3  # t/cap now
+    combined_df = pd.concat([grouped_df1, grouped_df2, converge], axis=1, keys=['df1', 'df2', 'converge'])
+    combined_df.columns = combined_df.columns.map('_'.join)
+    combined_df = combined_df/1e3 #t/cap now
+
 
     # Load a world map
     world = DLS_stock_reached
     # Remove Antarctica
-    world = world[world["continent"] != "Antarctica"]
+    world = world[world['continent'] != 'Antarctica']
 
     # Create figure and axis for the map
     fig, ax = plt.subplots(figsize=(20, 12))
-
+    
     import seaborn as sns
     from matplotlib.colors import LinearSegmentedColormap
-
+    
     # Get a light blue palette from seaborn
-    # light_blue_palette = sns.color_palette("Blues", 8)
+    #light_blue_palette = sns.color_palette("Blues", 8)
     light_blue_palette = sns.color_palette("coolwarm", 3)[::-1]
-    light_blue_cmap = LinearSegmentedColormap.from_list(
-        "light_blue", light_blue_palette
-    )
-
+    light_blue_cmap = LinearSegmentedColormap.from_list("light_blue", light_blue_palette)
+    
     light_blue_cmap = sns.dark_palette("#69d", as_cmap=True)
-    light_blue_cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
+    light_blue_cmap =sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
     light_blue_cmap = sns.color_palette("ch:start=.1,rot=-.15", as_cmap=True)
 
     # Plot the world map
-    world.plot(
-        column="value_cap",
-        ax=ax,
-        cmap=light_blue_cmap,
-        legend=False,
-        edgecolor="black",
-        zorder=0,
-    )
+    world.plot(column='value_cap', ax=ax, cmap=light_blue_cmap, legend=False, edgecolor='black', zorder=0)
 
     # Remove plot frame (axis spines)
     for spine in ax.spines.values():
         spine.set_visible(False)
-
+        
     # Remove x and y labels from the map plot
     ax.set_xticks([])
     ax.set_yticks([])
-
+   
     region_locations = {
-        "AFR": (-27, -70),
-        "CPA": (175, 10),
-        "EEU": (18, 85 + 5),
-        "FSU": (85, 80 + 5),
-        "LAM": (-160, -5),
-        "MEA": (-50, 8),
-        "NAM": (-155, 72 + 5),
-        "PAO": (165, 72 + 5),
-        "PAS": (165, -55),
-        "SAS": (60, -65),
-        "WEU": (-45, 80 + 5),
-    }
-
+        'AFR': (-27, -70),
+        'CPA': (175, 10),
+        'EEU': (18, 85+5),
+        'FSU': (85, 80+5),
+        'LAM': (-160, -5),
+        'MEA': (-50, 8),
+        'NAM': (-155, 72+5),
+        'PAO': (165, 72+5),
+        'PAS': (165, -55),
+        'SAS': (60, -65),
+        'WEU': (-45, 80+5)}
+    
+    
     region_full_names = {
-        "AFR": "Sub-Saharan Africa",
-        "CPA": "Centrally planned Asia",
-        "EEU": "Eastern Europe",
-        "FSU": "Former Soviet Union",
-        "LAM": "Latin America",
-        "MEA": "N. Africa & Middle East",
-        "NAM": "North America",
-        "PAO": "Japan, Australia, New Zealand",
-        "PAS": "Pacific Asia",
-        "SAS": "South Asia",
-        "WEU": "Western Europe",
-    }
-
+        'AFR': 'Sub-Saharan Africa',
+        'CPA': 'Centrally planned Asia',
+        'EEU': 'Eastern Europe',
+        'FSU': 'Former Soviet Union',
+        'LAM': 'Latin America',
+        'MEA': 'N. Africa & Middle East',
+        'NAM': 'North America',
+        'PAO': 'Japan, Australia, New Zealand',
+        'PAS': 'Pacific Asia',
+        'SAS': 'South Asia',
+        'WEU': 'Western Europe'}
+       
     region_connections = {
-        "AFR": (30, 0),
-        "CPA": (95, 35),
-        "EEU": (23, 55),
-        "FSU": (95, 70),
-        "LAM": (-80, -10),
-        "MEA": (25, 25),
-        "NAM": (-100, 60),
-        "PAO": (145, 55),
-        "PAS": (115, 5),
-        "SAS": (75, 30),
-        "WEU": (5, 50),
-    }
-
+        'AFR': (30, 0),
+        'CPA': (95, 35),
+        'EEU': (23, 55),
+        'FSU': (95, 70),
+        'LAM': (-80, -10),
+        'MEA': (25, 25),
+        'NAM': (-100, 60),
+        'PAO': (145, 55),
+        'PAS': (115, 5),
+        'SAS': (75, 30),
+        'WEU': (5, 50)}
+ 
     # Unique regions and dimensions for plotting
     regions = combined_df.index.get_level_values(0).unique()
     dimensions = combined_df.index.get_level_values(1).unique()
@@ -1085,15 +1354,10 @@ def plot_stacked_bars_sub_geo_converge(
     # Colors for df1 using a distinct colormap
     colors_df1 = plt.cm.tab20(np.linspace(0, 1, len(dimensions)))
     colors_df2 = plt.cm.Reds(np.linspace(0.5, 1, len(dimensions)))
-
+    
     # Legend handles
-    legend_handles = [
-        plt.Rectangle((0, 0), 1, 1, facecolor=color, edgecolor="black")
-        for color in colors_df1
-    ] + [plt.Rectangle((0, 0), 1, 1, facecolor="white", edgecolor="black")]
-    legend_handles.append(
-        Line2D([0, 1], [0, 0], color="red", marker="+", markersize=8, linewidth=0)
-    )
+    legend_handles = [plt.Rectangle((0, 0), 1, 1, facecolor=color, edgecolor='black')  for color in colors_df1] + [plt.Rectangle((0, 0), 1, 1, facecolor='white', edgecolor='black') ]
+    legend_handles.append(Line2D([0, 1], [0, 0], color='red', marker='+', markersize=8, linewidth=0))
     # Width of each bar
     width = 0.35  # Adjusted for two bars side by side
 
@@ -1106,158 +1370,91 @@ def plot_stacked_bars_sub_geo_converge(
         if region in region_locations and region in region_connections:
             # Transform region location to figure space
             x_fig, y_fig = inv(trans(region_locations[region]))
-
+    
             # Create a new axis at this location
-            region_ax = fig.add_axes(
-                [x_fig, y_fig, 0.06, 0.125]
-            )  # Adjust size as needed
-
+            region_ax = fig.add_axes([x_fig, y_fig, 0.06, 0.125])  # Adjust size as needed
+    
             # Add a title to each region's bar plot
-            region_ax.set_title(
-                split_title(region_full_names.get(region)), fontsize=13, loc="center"
-            )
-
+            region_ax.set_title(split_title(region_full_names.get(region)), fontsize=13, loc='center')
+    
             # Plotting
             for j, dimension in enumerate(dimensions):
-                df1_value = combined_df.loc[(region, dimension), "df1_stock"]
-                df2_value = combined_df.loc[(region, dimension), "df2_stock"]
-                df_grandf = combined_df.loc[(region, dimension), "converge_value_cap"]
-
+                df1_value = combined_df.loc[(region, dimension), 'df1_stock']
+                df2_value = combined_df.loc[(region, dimension), 'df2_stock']
+                df_grandf = combined_df.loc[(region, dimension), 'converge_value_cap']
+                
                 # set negatives to zero (negatives occur in case the DLS stock threshold with practice changes is lower than DLS stocks in 2015)
-                df2_value = df2_value[df2_value > 0]
-
+                df2_value = df2_value[df2_value>0]
+                
                 # Plot df1 value
-                region_ax.bar(
-                    j, df1_value, color=colors_df1[j], edgecolor="black", zorder=2
-                )
-
+                region_ax.bar(j, df1_value, color=colors_df1[j], edgecolor='black', zorder=2)
+    
                 # Plot df2 value as part of the stack on top of df1
-                region_ax.bar(
-                    j,
-                    df2_value,
-                    bottom=df1_value,
-                    color="white",
-                    edgecolor="black",
-                    zorder=2,
-                )
-
+                region_ax.bar(j, df2_value, bottom=df1_value, color='white', edgecolor='black', zorder=2)
+                
                 # plot line for converge threshold
-                region_ax.plot(
-                    [j, j],
-                    [df_grandf, df_grandf],
-                    marker="+",
-                    color="red",
-                    linewidth=0,
-                    zorder=3,
-                    markeredgewidth=1,
-                )
-                # region_ax.plot([j - 0.35, j + 0.35], [df_grandf, df_grandf], marker= '*', color='black', linewidth=0, zorder=3)
+                region_ax.plot([j , j ], [df_grandf, df_grandf], marker= '+', color='red', linewidth=0, zorder=3, markeredgewidth=1)
+                #region_ax.plot([j - 0.35, j + 0.35], [df_grandf, df_grandf], marker= '*', color='black', linewidth=0, zorder=3)
+
 
             # Correct y-ticks for each region's bar plot
-            max_value = (
-                combined_df.loc[region, combined_df.columns[:2]].sum(axis=1).max()
-            )
-            region_ax.set_yticks(
-                np.round(np.linspace(0, max_value, 5))
-            )  # Adjust number of ticks as needed
-            region_ax.set_ylabel("t/cap", fontsize=14)
+            max_value = combined_df.loc[region, combined_df.columns[:2]].sum(axis=1).max()
+            region_ax.set_yticks(np.round(np.linspace(0, max_value, 5)))  # Adjust number of ticks as needed
+            region_ax.set_ylabel('tons/cap', fontsize=14)
             region_ax.yaxis.set_tick_params(labelsize=12)
-
-            region_ax.set_ylim(0, max_value * 1.1)
-
+            
+            region_ax.set_ylim(0, max_value * 1.1) 
+            
             region_ax.set_xticks([])
-
+    
             # Get connection line end points
-            line_end = trans(
-                region_connections[region]
-            )  # Country location in figure space
+            line_end = trans(region_connections[region])  # Country location in figure space
             line_end_fig = inv(line_end)
-
+    
             # Draw first part of the line on the main map (ax)
             con_line_main = plt.Line2D(
-                [line_end_fig[0], x_fig + 0.05],
-                [line_end_fig[1], y_fig + 0.05],
-                transform=fig.transFigure,
-                color="black",
-                zorder=0,  # Set zorder to 0
+                [line_end_fig[0], x_fig + 0.05], 
+                [line_end_fig[1], y_fig + 0.05], 
+                transform=fig.transFigure, 
+                color='black', 
+                zorder=0  # Set zorder to 0
             )
             ax.add_line(con_line_main)  # Add the line to the main map (ax)
-
+    
             # Draw second part of the line on the region axis (region_ax)
             con_line_region = plt.Line2D(
-                [0, 0.05],
-                [0, 0.05],
-                transform=region_ax.transAxes,
-                color="black",
-                zorder=1,  # Set zorder to -1
+                [0, 0.05], 
+                [0, 0.05], 
+                transform=region_ax.transAxes, 
+                color='black', 
+                zorder=1  # Set zorder to -1
             )
-            region_ax.add_line(
-                con_line_region
-            )  # Add the line to the region axis (region_ax)
+            region_ax.add_line(con_line_region)  # Add the line to the region axis (region_ax)
 
     # Corresponding labels for the legend handles
-    legend_labels = [
-        "..existing, health",
-        "..existing, mobility",
-        "..existing, nutrition",
-        "..existing, shelter",
-        "..existing, socialization",
-    ]  # Add labels for the Rectangle objects
-    legend_labels.extend(
-        ["..to close DLS gaps: current practices"]
-    )  # Add labels for the Line2D objects
-    legend_labels.extend(
-        ["..to close DLS gaps: converged practices"]
-    )  # Add labels for the Line2D objects
+    legend_labels = ['..existing, health', '..existing, mobility', '..existing, nutrition', '..existing, shelter', '..existing, socialization']  # Add labels for the Rectangle objects
+    legend_labels.extend(['..to close DLS gaps: current practices'])  # Add labels for the Line2D objects
+    legend_labels.extend(['..to close DLS gaps: converged practices'])  # Add labels for the Line2D objects
     # Create the legend with both Rectangle and Line2D entries
-    legend = ax.legend(
-        handles=legend_handles,
-        labels=legend_labels,
-        title="DLS material stocks (Ø per capita)..",
-        loc="lower left",
-        bbox_to_anchor=(0.05, -0.095),
-        fontsize=14,
-        frameon=False,
-    )
+    legend = ax.legend(handles=legend_handles, labels=legend_labels, title='DLS material stocks (Ø per capita)..', loc='lower left', bbox_to_anchor=(0.05, -0.095), fontsize=14, frameon=False)
     legend._legend_box.align = "left"
-    plt.setp(legend.get_title(), fontsize="14", color="black", weight="normal")
+    plt.setp(legend.get_title(), fontsize='14', color='black', weight='normal')
     ax.set_title(title, fontsize=30, pad=160, x=0.55)
     # Add color bar for country values under the map
     sm = plt.cm.ScalarMappable(cmap=light_blue_cmap, norm=plt.Normalize(vmin=0, vmax=1))
-    cbar_ax = fig.add_axes(
-        [0.17, 0.145, 0.76, 0.02]
-    )  # Adjust position and size as needed
-    cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
+    cbar_ax = fig.add_axes([0.17, 0.145, 0.76, 0.02])  # Adjust position and size as needed
+    cbar = fig.colorbar(sm, cax=cbar_ax, orientation='horizontal')
     cbar.ax.tick_params(labelsize=15)
-    cbar.ax.text(
-        0,
-        1.8,
-        "No DLS material stocks",
-        verticalalignment="center",
-        transform=cbar_ax.transAxes,
-        fontsize=16,
-    )
-    cbar.ax.text(
-        0.85,
-        1.8,
-        "DLS material stocks",
-        verticalalignment="center",
-        transform=cbar_ax.transAxes,
-        fontsize=16,
-    )
-    cbar.ax.text(
-        0.26,
-        0.37,
-        "DLS stocks reached = (existing DLS stocks / DLS stock threshold)",
-        verticalalignment="center",
-        transform=cbar_ax.transAxes,
-        fontsize=16,
-        color="white",
-    )
-    cbar.set_ticklabels([f"{int(100 * x)}%" for x in np.linspace(0, 1, 6)])
+    cbar.ax.text(0, 1.8, 'No DLS material stocks', verticalalignment='center', transform=cbar_ax.transAxes,fontsize=16)
+    cbar.ax.text(0.85, 1.8, 'DLS material stocks', verticalalignment='center', transform=cbar_ax.transAxes,fontsize=16)
+    cbar.ax.text(0.26, 0.4, 'DLS stocks reached = (existing DLS stocks / DLS stock threshold)', verticalalignment='center', transform=cbar_ax.transAxes,fontsize=16, color='white')
+    cbar.set_ticklabels([f'{int(100 * x)}%' for x in np.linspace(0, 1, 6)])
+    #print(plt.rcParams['font.family'])
+    #fig.savefig("Fig_2a.pdf", bbox_inches='tight')
     plt.show()
-    # fig.savefig('Fig1a_DLSgapMap.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
     return combined_df
+
+
 
 
 def plot_stacked_bars_sub_geo_converge_onlyMap(
@@ -1865,448 +2062,448 @@ def plot_country_distribution_one(df, items, title):
     # fig.savefig('Fig1b_DLSthresholds.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
     plt.close("all")
 
-
-def plot_country_distribution_one_converge_small(df, converge_df, items, title):
-    # Calculate stats and populations for the first item to determine the R11 order
-    first_item_stats = (
-        df.groupby("R11")[items[0]]
-        .agg(["mean", "min", "max", "median"])
-        .sort_values(by="mean", ascending=False)
-    )
-    converge_stats = (
-        converge_df.groupby("R11")["value_cap"]
-        .agg(["mean", "min", "max", "median"])
-        .sort_values(by="mean", ascending=False)
-    )
-    # replace mean, as not population weighted above
-    first_item_stats["mean"] = (
-        df.set_index(["region", "R11"])[items[0]]
-        * df.set_index(["region", "R11"])["population_countries"]
-    ).groupby("R11").sum() / df.set_index(["region", "R11"])[
-        "population_countries"
-    ].groupby("R11").sum()
-    first_item_stats = first_item_stats.sort_values(by="mean", ascending=False)
-    converge_stats["mean"] = (
-        converge_df.set_index(["region", "R11"])["value_cap"]
-        * converge_df.set_index(["region", "R11"])["population_countries"]
-    ).groupby("R11").sum() / converge_df.set_index(["region", "R11"])[
-        "population_countries"
-    ].groupby("R11").sum()
-    converge_stats = converge_stats.sort_values(by="mean", ascending=False) / 1e3
-    populations = (
-        df.groupby("R11")["population_R11"]
-        .first()
-        .reindex(index=first_item_stats.index)
-    )
-    unique_R11 = (
-        (
-            (
-                df.set_index(["region", "R11"])[items[1]]
-                * df.set_index(["region", "R11"])["population_countries"]
-            )
-            .groupby("R11")
-            .sum()
-            / df.set_index(["region", "R11"])["population_countries"]
-            .groupby("R11")
-            .sum()
-        )
-        .sort_values(ascending=False)
-        .index
-    )
-    colors = plt.cm.get_cmap("tab20", len(unique_R11))
-    color_dict = {R11: colors(i) for i, R11 in enumerate(unique_R11)}
-
-    # Create a single figure and axis
-    fig, ax = plt.subplots(figsize=(22, 8))
-
-    # Define x-axis formatter for billions
-    def billion_formatter(x, pos):
-        return f"{int(x / 1e3)}B"
-
-    cumulative_population = 0  # Initialize cumulative population
-    x_positions = []  # Store x positions for setting x-ticks later
-
-    # Create the legend
-    region_full_names = {
-        "AFR": "Subs.\nAfrica",
-        "CPA": "Centrally \nplanned \nAsia",
-        "EEU": "E. Europe",
-        "FSU": "F. Soviet Union",
-        "LAM": "Latin \nAmerica",
-        "MEA": "N. Africa \n& Middle East",
-        "NAM": "North America",
-        "PAO": "JP, AU, NZ",
-        "PAS": "Pacific \nAsia",
-        "SAS": "South \nAsia",
-        "WEU": "W. Europe",
-    }
-
-    for R11 in unique_R11:
-        width = populations[R11]  # Population as bar width
-
-        # Get the mean values for both items
-        mean_value_1 = first_item_stats.loc[R11, "mean"]
-        stats_item2 = (
-            df.groupby("R11")[items[1]]
-            .agg(["mean", "min", "max", "median"])
-            .reindex(index=unique_R11)
-        )
-        # replace mean, as not population weighted above
-        stats_item2["mean"] = (
-            df.set_index(["region", "R11"])[items[1]]
-            * df.set_index(["region", "R11"])["population_countries"]
-        ).groupby("R11").sum() / df.set_index(["region", "R11"])[
-            "population_countries"
-        ].groupby("R11").sum()
-        stats_item2 = stats_item2.reindex(index=unique_R11)
-
-        mean_value_2 = stats_item2.loc[R11, "mean"] - mean_value_1
-
-        # Plot bar for the first item
-        ax.bar(
-            cumulative_population + width / 2,
-            mean_value_1,
-            width=width,
-            edgecolor="#3b4cc0",
-            facecolor="white",
-            alpha=0.9,
-            linewidth=4,
-        )
-
-        # Calculate the alpha based on the proportion of mean_value_1 in the total
-        total_value = mean_value_1 + mean_value_2
-        alpha_value = (
-            mean_value_1 / total_value if total_value != 0 else 0
-        )  # Avoid division by zero
-
-        # Set the bar with the dynamically calculated alpha for facecolor
-        ax.bar(
-            cumulative_population + width / 2,
-            mean_value_1,
-            width=width,
-            edgecolor=(0.23, 0.30, 0.75, 0.5),  # Edgecolor with fixed alpha
-            facecolor="#3b4cc0",  # Face color
-            alpha=alpha_value * 0.4,  # Dynamic alpha based on the ratio
-            linewidth=4,
-        )
-
-        # Stack the bar for the second item on top of the first
-        ax.bar(
-            cumulative_population + width / 2,
-            mean_value_2,
-            width=width,
-            edgecolor="black",
-            facecolor="white",
-            alpha=0.6,
-            bottom=mean_value_1,
-            linewidth=4,
-        )
-
-        # Plot statistical markers for the first item
-        min_value_1 = first_item_stats.loc[R11, "min"]
-        max_value_1 = first_item_stats.loc[R11, "max"]
-        med_value_1 = first_item_stats.loc[R11, "median"]
-        ax.plot(
-            cumulative_population + width / 2,
-            med_value_1,
-            "o",
-            color="#3b4cc0",
-            markersize=10,
-            alpha=0.4,
-        )
-        ax.vlines(
-            cumulative_population + width / 2,
-            min_value_1,
-            max_value_1,
-            color="#3b4cc0",
-            lw=4,
-            alpha=0.4,
-        )
-
-        # Plot statistical markers for the second item
-        min_value_2 = stats_item2.loc[R11, "min"]
-        max_value_2 = stats_item2.loc[R11, "max"]
-        med_value_2 = stats_item2.loc[R11, "median"]
-        ax.plot(
-            cumulative_population + width / 2 + (width / 8),
-            med_value_2,
-            "o",
-            color="black",
-            markersize=10,
-            alpha=0.4,
-        )
-        ax.vlines(
-            cumulative_population + width / 2 + (width / 8),
-            min_value_2,
-            max_value_2,
-            color="black",
-            lw=4,
-            alpha=0.4,
-        )
-
-        # # Plot statistical markers for the converge threshold
-        min_value_3 = converge_stats.loc[R11, "min"]
-        max_value_3 = converge_stats.loc[R11, "max"]
-        med_value_3 = converge_stats.loc[R11, "median"]
-        mean_value_3 = converge_stats.loc[R11, "mean"]
-        # ax.plot(cumulative_population + width / 2 + (width/4), med_value_3 , 'o', color='grey', markersize=10)
-        ax.plot(
-            cumulative_population + width / 2 + (width / 4),
-            mean_value_3,
-            "+",
-            color="red",
-            markersize=12,
-            markeredgewidth=3,
-            alpha=0.4,
-        )
-        ax.vlines(
-            cumulative_population + width / 2 + (width / 4),
-            min_value_3,
-            max_value_3,
-            color="red",
-            lw=4,
-            alpha=0.4,
-        )
-
-        ax.text(
-            cumulative_population + width / 2,
-            2,
-            region_full_names[R11],
-            ha="center",
-            va="bottom",
-            fontsize=20,
-            color="black",
-            rotation=90,
-        )
-
-        cumulative_population += width
-        x_positions.append(
-            cumulative_population - width / 2
-        )  # Center position for x-ticks
-
-    ax.set_title(title, fontsize=32, pad=25, x=0.5)
-    ax.set_xlabel("Population (billions)", fontsize=20)
-    ax.set_ylabel("tons / capita", fontsize=20)
-
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(billion_formatter))
-    ax.set_xticklabels([f"{pop}" for pop in [0, 0, 1, 2, 3, 4, 5, 6, 7]])
-    ax.yaxis.set_tick_params(labelsize=18)
-    ax.xaxis.set_tick_params(labelsize=18)
-
-    ax.yaxis.set_tick_params(labelsize=20)
-    ax.xaxis.set_tick_params(labelsize=20)
-
-    # Add horizontal lines for reference
-    for y in [20, 40, 60]:
-        ax.axhline(y=y, color="gray", linestyle="--", linewidth=1)
-
-    # Create the custom legend elements
-    white_patch_blue_line = mpatches.Patch(
-        facecolor="white",
-        edgecolor="#3b4cc0",
-        alpha=0.4,
-        linewidth=4,
-        label="Existing DLS stocks (mean)",
-    )
-    white_patch_red_line = mpatches.Patch(
-        facecolor="white",
-        edgecolor="black",
-        alpha=0.4,
-        linewidth=4,
-        label="DLS stock gap: current practices (mean)",
-    )
-    # white_patch_red_line_blue_fill = mpatches.Patch(facecolor='#3b4cc080', edgecolor='#b40426', linewidth=4, label='DLS stocks threshold (mean) below existing DLS stocks')
-
-    line_with_marker = mlines.Line2D(
-        [],
-        [],
-        color="black",
-        marker="o",
-        markersize=10,
-        alpha=0.4,
-        label="country variation within each region (min,med,max)",
-    )
-    line_with_marker_grandf = mlines.Line2D(
-        [],
-        [],
-        color="red",
-        alpha=0.4,
-        marker="+",
-        markersize=10,
-        label="DLS stock threshold: converged practices (min,mean,max)",
-    )
-
-    legend = ax.legend(
-        handles=[
-            white_patch_blue_line,
-            white_patch_red_line,
-            line_with_marker,
-            line_with_marker_grandf,
-        ],
-        loc="upper right",
-        fontsize=20,
-        ncol=1,
-        title="DLS material stocks, Ø per capita (scale: countries entire population)",
-        title_fontsize=20,
-    )  # bbox_to_anchor=(0.05, -0.095),
-    legend.get_title().set_ha("left")  # Or 'right' or 'center'
-
-    ax.set_xlim(0 - 50000, cumulative_population + 50000)
-    plt.tight_layout()
-    plt.show()
-    # fig.savefig('Fig1b_DLSthresholds.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
-    plt.close("all")
-
-
-
-    
+## OLD
 # def plot_country_distribution_one_converge_small(df, converge_df, items, title):
-
 #     # Calculate stats and populations for the first item to determine the R11 order
-#     first_item_stats = df.groupby('R11')[items[0]].agg(['mean','min', 'max', 'median']).sort_values(by='mean', ascending=False)
-#     converge_stats = converge_df.groupby('R11')['value_cap'].agg(['mean','min', 'max', 'median']).sort_values(by='mean', ascending=False)
-#     #replace mean, as not population weighted above
-#     first_item_stats['mean'] = (df.set_index(['region','R11'])[items[0]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
-#     first_item_stats =  first_item_stats.sort_values(by='mean', ascending=False)
-#     converge_stats['mean'] = (converge_df.set_index(['region','R11'])['value_cap'] * converge_df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / converge_df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
-#     converge_stats =  converge_stats.sort_values(by='mean', ascending=False) /1e3
-#     populations = df.groupby('R11')['population_R11'].first().reindex(index=first_item_stats.index)
-#     unique_R11 = ((df.set_index(['region','R11'])[items[1]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()).sort_values(ascending=False).index
-#     colors = plt.cm.get_cmap('tab20', len(unique_R11))
+#     first_item_stats = (
+#         df.groupby("R11")[items[0]]
+#         .agg(["mean", "min", "max", "median"])
+#         .sort_values(by="mean", ascending=False)
+#     )
+#     converge_stats = (
+#         converge_df.groupby("R11")["value_cap"]
+#         .agg(["mean", "min", "max", "median"])
+#         .sort_values(by="mean", ascending=False)
+#     )
+#     # replace mean, as not population weighted above
+#     first_item_stats["mean"] = (
+#         df.set_index(["region", "R11"])[items[0]]
+#         * df.set_index(["region", "R11"])["population_countries"]
+#     ).groupby("R11").sum() / df.set_index(["region", "R11"])[
+#         "population_countries"
+#     ].groupby("R11").sum()
+#     first_item_stats = first_item_stats.sort_values(by="mean", ascending=False)
+#     converge_stats["mean"] = (
+#         converge_df.set_index(["region", "R11"])["value_cap"]
+#         * converge_df.set_index(["region", "R11"])["population_countries"]
+#     ).groupby("R11").sum() / converge_df.set_index(["region", "R11"])[
+#         "population_countries"
+#     ].groupby("R11").sum()
+#     converge_stats = converge_stats.sort_values(by="mean", ascending=False) / 1e3
+#     populations = (
+#         df.groupby("R11")["population_R11"]
+#         .first()
+#         .reindex(index=first_item_stats.index)
+#     )
+#     unique_R11 = (
+#         (
+#             (
+#                 df.set_index(["region", "R11"])[items[1]]
+#                 * df.set_index(["region", "R11"])["population_countries"]
+#             )
+#             .groupby("R11")
+#             .sum()
+#             / df.set_index(["region", "R11"])["population_countries"]
+#             .groupby("R11")
+#             .sum()
+#         )
+#         .sort_values(ascending=False)
+#         .index
+#     )
+#     colors = plt.cm.get_cmap("tab20", len(unique_R11))
 #     color_dict = {R11: colors(i) for i, R11 in enumerate(unique_R11)}
-    
+
 #     # Create a single figure and axis
 #     fig, ax = plt.subplots(figsize=(22, 8))
-    
+
 #     # Define x-axis formatter for billions
 #     def billion_formatter(x, pos):
-#         return f'{int(x / 1e3)}B'
-    
-    
+#         return f"{int(x / 1e3)}B"
+
 #     cumulative_population = 0  # Initialize cumulative population
 #     x_positions = []  # Store x positions for setting x-ticks later
-    
+
 #     # Create the legend
 #     region_full_names = {
-#         'AFR': 'Subs.\nAfrica',
-#         'CPA': 'Centrally \nplanned \nAsia',
-#         'EEU': 'E. Europe',
-#         'FSU': 'F. Soviet Union',
-#         'LAM': 'Latin \nAmerica',
-#         'MEA': 'N. Africa \n& Middle East',
-#         'NAM': 'North America',
-#         'PAO': 'JP, AU, NZ',
-#         'PAS': 'Pacific \nAsia',
-#         'SAS': 'South \nAsia',
-#         'WEU': 'W. Europe'}
-    
+#         "AFR": "Subs.\nAfrica",
+#         "CPA": "Centrally \nplanned \nAsia",
+#         "EEU": "E. Europe",
+#         "FSU": "F. Soviet Union",
+#         "LAM": "Latin \nAmerica",
+#         "MEA": "N. Africa \n& Middle East",
+#         "NAM": "North America",
+#         "PAO": "JP, AU, NZ",
+#         "PAS": "Pacific \nAsia",
+#         "SAS": "South \nAsia",
+#         "WEU": "W. Europe",
+#     }
 
 #     for R11 in unique_R11:
 #         width = populations[R11]  # Population as bar width
-        
+
 #         # Get the mean values for both items
-#         mean_value_1 = first_item_stats.loc[R11, 'mean']
-#         stats_item2 = df.groupby('R11')[items[1]].agg(['mean', 'min', 'max', 'median']).reindex(index=unique_R11)
-#         #replace mean, as not population weighted above
-#         stats_item2['mean'] = (df.set_index(['region','R11'])[items[1]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
-#         stats_item2 =  stats_item2.reindex(index=unique_R11)
-        
-#         mean_value_2 = stats_item2.loc[R11, 'mean'] -      mean_value_1 
-        
+#         mean_value_1 = first_item_stats.loc[R11, "mean"]
+#         stats_item2 = (
+#             df.groupby("R11")[items[1]]
+#             .agg(["mean", "min", "max", "median"])
+#             .reindex(index=unique_R11)
+#         )
+#         # replace mean, as not population weighted above
+#         stats_item2["mean"] = (
+#             df.set_index(["region", "R11"])[items[1]]
+#             * df.set_index(["region", "R11"])["population_countries"]
+#         ).groupby("R11").sum() / df.set_index(["region", "R11"])[
+#             "population_countries"
+#         ].groupby("R11").sum()
+#         stats_item2 = stats_item2.reindex(index=unique_R11)
+
+#         mean_value_2 = stats_item2.loc[R11, "mean"] - mean_value_1
+
 #         # Plot bar for the first item
-#         ax.bar(cumulative_population + width / 2, mean_value_1, width=width, edgecolor='#3b4cc0',
-#                facecolor='white', alpha=0.9, linewidth=4)
+#         ax.bar(
+#             cumulative_population + width / 2,
+#             mean_value_1,
+#             width=width,
+#             edgecolor="#3b4cc0",
+#             facecolor="white",
+#             alpha=0.9,
+#             linewidth=4,
+#         )
 
 #         # Calculate the alpha based on the proportion of mean_value_1 in the total
 #         total_value = mean_value_1 + mean_value_2
-#         alpha_value = mean_value_1 / total_value if total_value != 0 else 0  # Avoid division by zero
+#         alpha_value = (
+#             mean_value_1 / total_value if total_value != 0 else 0
+#         )  # Avoid division by zero
 
-#     # Set the bar with the dynamically calculated alpha for facecolor
+#         # Set the bar with the dynamically calculated alpha for facecolor
 #         ax.bar(
-#     cumulative_population + width / 2,
-#     mean_value_1,
-#     width=width,
-#     edgecolor=(0.23, 0.30, 0.75, 0.5),  # Edgecolor with fixed alpha
-#     facecolor='#3b4cc0',  # Face color
-#     alpha=alpha_value*0.4,  # Dynamic alpha based on the ratio
-#     linewidth=4
-# )
-       
+#             cumulative_population + width / 2,
+#             mean_value_1,
+#             width=width,
+#             edgecolor=(0.23, 0.30, 0.75, 0.5),  # Edgecolor with fixed alpha
+#             facecolor="#3b4cc0",  # Face color
+#             alpha=alpha_value * 0.4,  # Dynamic alpha based on the ratio
+#             linewidth=4,
+#         )
+
 #         # Stack the bar for the second item on top of the first
-#         ax.bar(cumulative_population + width / 2, mean_value_2, width=width, edgecolor='black',
-#                facecolor='white', alpha=0.6, bottom=mean_value_1, linewidth=4)
-    
-        
+#         ax.bar(
+#             cumulative_population + width / 2,
+#             mean_value_2,
+#             width=width,
+#             edgecolor="black",
+#             facecolor="white",
+#             alpha=0.6,
+#             bottom=mean_value_1,
+#             linewidth=4,
+#         )
+
 #         # Plot statistical markers for the first item
-#         min_value_1 = first_item_stats.loc[R11, 'min']
-#         max_value_1 = first_item_stats.loc[R11, 'max']
-#         med_value_1 = first_item_stats.loc[R11, 'median']
-#         ax.plot(cumulative_population + width / 2, med_value_1, 'o', color='#3b4cc0', markersize=10, alpha=0.4)
-#         ax.vlines(cumulative_population + width / 2, min_value_1, max_value_1, color='#3b4cc0', lw=4, alpha=0.4)
-        
+#         min_value_1 = first_item_stats.loc[R11, "min"]
+#         max_value_1 = first_item_stats.loc[R11, "max"]
+#         med_value_1 = first_item_stats.loc[R11, "median"]
+#         ax.plot(
+#             cumulative_population + width / 2,
+#             med_value_1,
+#             "o",
+#             color="#3b4cc0",
+#             markersize=10,
+#             alpha=0.4,
+#         )
+#         ax.vlines(
+#             cumulative_population + width / 2,
+#             min_value_1,
+#             max_value_1,
+#             color="#3b4cc0",
+#             lw=4,
+#             alpha=0.4,
+#         )
+
 #         # Plot statistical markers for the second item
-#         min_value_2 = stats_item2.loc[R11, 'min']
-#         max_value_2 = stats_item2.loc[R11, 'max']
-#         med_value_2 = stats_item2.loc[R11, 'median']
-#         ax.plot(cumulative_population + width / 2 + (width/8), med_value_2 , 'o', color='black', markersize=10, alpha=0.4)
-#         ax.vlines(cumulative_population + width / 2+ (width/8), min_value_2 , max_value_2 ,
-#                   color='black', lw=4, alpha=0.4)
-        
+#         min_value_2 = stats_item2.loc[R11, "min"]
+#         max_value_2 = stats_item2.loc[R11, "max"]
+#         med_value_2 = stats_item2.loc[R11, "median"]
+#         ax.plot(
+#             cumulative_population + width / 2 + (width / 8),
+#             med_value_2,
+#             "o",
+#             color="black",
+#             markersize=10,
+#             alpha=0.4,
+#         )
+#         ax.vlines(
+#             cumulative_population + width / 2 + (width / 8),
+#             min_value_2,
+#             max_value_2,
+#             color="black",
+#             lw=4,
+#             alpha=0.4,
+#         )
 
 #         # # Plot statistical markers for the converge threshold
-#         min_value_3 = converge_stats.loc[R11, 'min']
-#         max_value_3 = converge_stats.loc[R11, 'max']
-#         med_value_3 = converge_stats.loc[R11, 'median']
-#         mean_value_3 = converge_stats.loc[R11, 'mean']
-#         #ax.plot(cumulative_population + width / 2 + (width/4), med_value_3 , 'o', color='grey', markersize=10)
-#         ax.plot(cumulative_population + width / 2 + (width/4),   mean_value_3 , '+', color='red', markersize=12, markeredgewidth=3, alpha=0.4)
-#         ax.vlines(cumulative_population + width / 2+ (width/4), min_value_3 , max_value_3 ,
-#                   color='red', lw=4, alpha=0.4)
-        
-#         ax.text(cumulative_population + width / 2, 2, region_full_names[R11], 
-#                 ha='center', va='bottom', fontsize=20, color='black', rotation= 90)
-        
+#         min_value_3 = converge_stats.loc[R11, "min"]
+#         max_value_3 = converge_stats.loc[R11, "max"]
+#         med_value_3 = converge_stats.loc[R11, "median"]
+#         mean_value_3 = converge_stats.loc[R11, "mean"]
+#         # ax.plot(cumulative_population + width / 2 + (width/4), med_value_3 , 'o', color='grey', markersize=10)
+#         ax.plot(
+#             cumulative_population + width / 2 + (width / 4),
+#             mean_value_3,
+#             "+",
+#             color="red",
+#             markersize=12,
+#             markeredgewidth=3,
+#             alpha=0.4,
+#         )
+#         ax.vlines(
+#             cumulative_population + width / 2 + (width / 4),
+#             min_value_3,
+#             max_value_3,
+#             color="red",
+#             lw=4,
+#             alpha=0.4,
+#         )
+
+#         ax.text(
+#             cumulative_population + width / 2,
+#             2,
+#             region_full_names[R11],
+#             ha="center",
+#             va="bottom",
+#             fontsize=20,
+#             color="black",
+#             rotation=90,
+#         )
+
 #         cumulative_population += width
-#         x_positions.append(cumulative_population - width / 2)  # Center position for x-ticks
-        
-        
+#         x_positions.append(
+#             cumulative_population - width / 2
+#         )  # Center position for x-ticks
+
 #     ax.set_title(title, fontsize=32, pad=25, x=0.5)
-#     ax.set_xlabel('Population (billions)', fontsize=20)
-#     ax.set_ylabel('tons / capita', fontsize=20)
-   
-    
+#     ax.set_xlabel("Population (billions)", fontsize=20)
+#     ax.set_ylabel("tons / capita", fontsize=20)
+
 #     ax.xaxis.set_major_formatter(plt.FuncFormatter(billion_formatter))
-#     ax.set_xticklabels([f'{pop}' for pop in [0, 0, 1, 2, 3, 4, 5, 6, 7]])
+#     ax.set_xticklabels([f"{pop}" for pop in [0, 0, 1, 2, 3, 4, 5, 6, 7]])
 #     ax.yaxis.set_tick_params(labelsize=18)
 #     ax.xaxis.set_tick_params(labelsize=18)
-    
+
 #     ax.yaxis.set_tick_params(labelsize=20)
 #     ax.xaxis.set_tick_params(labelsize=20)
-    
+
 #     # Add horizontal lines for reference
 #     for y in [20, 40, 60]:
-#         ax.axhline(y=y, color='gray', linestyle='--', linewidth=1)
-        
-#     # Create the custom legend elements
-#     white_patch_blue_line = mpatches.Patch(facecolor='blue', edgecolor='#3b4cc0', alpha=0.3,linewidth=4, label='Existing DLS stocks (regional mean)') 
-#     white_patch_red_line = mpatches.Patch(facecolor='white', edgecolor='black',alpha=0.4, linewidth=4, label='DLS stock gap: current practices (regional mean)')
-#     #white_patch_red_line_blue_fill = mpatches.Patch(facecolor='#3b4cc080', edgecolor='#b40426', linewidth=4, label='DLS stocks threshold (mean) below existing DLS stocks')
+#         ax.axhline(y=y, color="gray", linestyle="--", linewidth=1)
 
-#     line_with_marker = mlines.Line2D([], [], color='black', marker='o', markersize=10, alpha=0.4, label='country variation within each region (min,med,max)')
-#     line_with_marker_grandf = mlines.Line2D([], [], color='red', alpha=0.4, marker='+', markersize=10, label='DLS stock threshold: converged practices (min,mean,max)')
-    
-#     legend = ax.legend(handles=[white_patch_blue_line, white_patch_red_line, line_with_marker, line_with_marker_grandf],
-#           loc='upper right', fontsize=20,  ncol=1, title = 'DLS material stocks, Ø per capita (scale: countries entire population)', 
-#           title_fontsize=20) # bbox_to_anchor=(0.05, -0.095),
-#     legend.get_title().set_ha('left')  # Or 'right' or 'center'
-    
-    
+#     # Create the custom legend elements
+#     white_patch_blue_line = mpatches.Patch(
+#         facecolor="white",
+#         edgecolor="#3b4cc0",
+#         alpha=0.4,
+#         linewidth=4,
+#         label="Existing DLS stocks (mean)",
+#     )
+#     white_patch_red_line = mpatches.Patch(
+#         facecolor="white",
+#         edgecolor="black",
+#         alpha=0.4,
+#         linewidth=4,
+#         label="DLS stock gap: current practices (mean)",
+#     )
+#     # white_patch_red_line_blue_fill = mpatches.Patch(facecolor='#3b4cc080', edgecolor='#b40426', linewidth=4, label='DLS stocks threshold (mean) below existing DLS stocks')
+
+#     line_with_marker = mlines.Line2D(
+#         [],
+#         [],
+#         color="black",
+#         marker="o",
+#         markersize=10,
+#         alpha=0.4,
+#         label="country variation within each region (min,med,max)",
+#     )
+#     line_with_marker_grandf = mlines.Line2D(
+#         [],
+#         [],
+#         color="red",
+#         alpha=0.4,
+#         marker="+",
+#         markersize=10,
+#         label="DLS stock threshold: converged practices (min,mean,max)",
+#     )
+
+#     legend = ax.legend(
+#         handles=[
+#             white_patch_blue_line,
+#             white_patch_red_line,
+#             line_with_marker,
+#             line_with_marker_grandf,
+#         ],
+#         loc="upper right",
+#         fontsize=20,
+#         ncol=1,
+#         title="DLS material stocks, Ø per capita (scale: countries entire population)",
+#         title_fontsize=20,
+#     )  # bbox_to_anchor=(0.05, -0.095),
+#     legend.get_title().set_ha("left")  # Or 'right' or 'center'
+
 #     ax.set_xlim(0 - 50000, cumulative_population + 50000)
 #     plt.tight_layout()
-#     fig.savefig("Fig_2b.pdf", bbox_inches='tight')
 #     plt.show()
-#     plt.close('all')
+#     # fig.savefig('Fig1b_DLSthresholds.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
+#     plt.close("all")
 
+
+
+    
+def plot_country_distribution_one_converge_small(df, converge_df, items, title):
+
+    # Calculate stats and populations for the first item to determine the R11 order
+    first_item_stats = df.groupby('R11')[items[0]].agg(['mean','min', 'max', 'median']).sort_values(by='mean', ascending=False)
+    converge_stats = converge_df.groupby('R11')['value_cap'].agg(['mean','min', 'max', 'median']).sort_values(by='mean', ascending=False)
+    #replace mean, as not population weighted above
+    first_item_stats['mean'] = (df.set_index(['region','R11'])[items[0]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
+    first_item_stats =  first_item_stats.sort_values(by='mean', ascending=False)
+    converge_stats['mean'] = (converge_df.set_index(['region','R11'])['value_cap'] * converge_df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / converge_df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
+    converge_stats =  converge_stats.sort_values(by='mean', ascending=False) /1e3
+    populations = df.groupby('R11')['population_R11'].first().reindex(index=first_item_stats.index)
+    unique_R11 = ((df.set_index(['region','R11'])[items[1]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()).sort_values(ascending=False).index
+    colors = plt.cm.get_cmap('tab20', len(unique_R11))
+    color_dict = {R11: colors(i) for i, R11 in enumerate(unique_R11)}
+    
+    # Create a single figure and axis
+    fig, ax = plt.subplots(figsize=(22, 8))
+    
+    # Define x-axis formatter for billions
+    def billion_formatter(x, pos):
+        return f'{int(x / 1e3)}B'
+    
+    
+    cumulative_population = 0  # Initialize cumulative population
+    x_positions = []  # Store x positions for setting x-ticks later
+    
+    # Create the legend
+    region_full_names = {
+        'AFR': 'Subs.\nAfrica',
+        'CPA': 'Centrally \nplanned \nAsia',
+        'EEU': 'E. Europe',
+        'FSU': 'F. Soviet Union',
+        'LAM': 'Latin \nAmerica',
+        'MEA': 'N. Africa \n& Middle East',
+        'NAM': 'North America',
+        'PAO': 'JP, AU, NZ',
+        'PAS': 'Pacific \nAsia',
+        'SAS': 'South \nAsia',
+        'WEU': 'W. Europe'}
+    
+
+    for R11 in unique_R11:
+        width = populations[R11]  # Population as bar width
+        
+        # Get the mean values for both items
+        mean_value_1 = first_item_stats.loc[R11, 'mean']
+        stats_item2 = df.groupby('R11')[items[1]].agg(['mean', 'min', 'max', 'median']).reindex(index=unique_R11)
+        #replace mean, as not population weighted above
+        stats_item2['mean'] = (df.set_index(['region','R11'])[items[1]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
+        stats_item2 =  stats_item2.reindex(index=unique_R11)
+        
+        mean_value_2 = stats_item2.loc[R11, 'mean'] -      mean_value_1 
+        
+        # Plot bar for the first item
+        ax.bar(cumulative_population + width / 2, mean_value_1, width=width, edgecolor='#3b4cc0',
+               facecolor='white', alpha=0.9, linewidth=4)
+
+        # Calculate the alpha based on the proportion of mean_value_1 in the total
+        total_value = mean_value_1 + mean_value_2
+        alpha_value = mean_value_1 / total_value if total_value != 0 else 0  # Avoid division by zero
+
+    # Set the bar with the dynamically calculated alpha for facecolor
+        ax.bar(
+    cumulative_population + width / 2,
+    mean_value_1,
+    width=width,
+    edgecolor=(0.23, 0.30, 0.75, 0.5),  # Edgecolor with fixed alpha
+    facecolor='#3b4cc0',  # Face color
+    alpha=alpha_value*0.4,  # Dynamic alpha based on the ratio
+    linewidth=4
+)
+       
+        # Stack the bar for the second item on top of the first
+        ax.bar(cumulative_population + width / 2, mean_value_2, width=width, edgecolor='black',
+               facecolor='white', alpha=0.6, bottom=mean_value_1, linewidth=4)
+    
+        
+        # Plot statistical markers for the first item
+        min_value_1 = first_item_stats.loc[R11, 'min']
+        max_value_1 = first_item_stats.loc[R11, 'max']
+        med_value_1 = first_item_stats.loc[R11, 'median']
+        ax.plot(cumulative_population + width / 2, med_value_1, 'o', color='#3b4cc0', markersize=10, alpha=0.4)
+        ax.vlines(cumulative_population + width / 2, min_value_1, max_value_1, color='#3b4cc0', lw=4, alpha=0.4)
+        
+        # Plot statistical markers for the second item
+        min_value_2 = stats_item2.loc[R11, 'min']
+        max_value_2 = stats_item2.loc[R11, 'max']
+        med_value_2 = stats_item2.loc[R11, 'median']
+        ax.plot(cumulative_population + width / 2 + (width/8), med_value_2 , 'o', color='black', markersize=10, alpha=0.4)
+        ax.vlines(cumulative_population + width / 2+ (width/8), min_value_2 , max_value_2 ,
+                  color='black', lw=4, alpha=0.4)
+        
+
+        # # Plot statistical markers for the converge threshold
+        min_value_3 = converge_stats.loc[R11, 'min']
+        max_value_3 = converge_stats.loc[R11, 'max']
+        med_value_3 = converge_stats.loc[R11, 'median']
+        mean_value_3 = converge_stats.loc[R11, 'mean']
+        #ax.plot(cumulative_population + width / 2 + (width/4), med_value_3 , 'o', color='grey', markersize=10)
+        ax.plot(cumulative_population + width / 2 + (width/4),   mean_value_3 , '+', color='red', markersize=12, markeredgewidth=3, alpha=0.4)
+        ax.vlines(cumulative_population + width / 2+ (width/4), min_value_3 , max_value_3 ,
+                  color='red', lw=4, alpha=0.4)
+        
+        ax.text(cumulative_population + width / 2, 2, region_full_names[R11], 
+                ha='center', va='bottom', fontsize=20, color='black', rotation= 90)
+        
+        cumulative_population += width
+        x_positions.append(cumulative_population - width / 2)  # Center position for x-ticks
+        
+        
+    ax.set_title(title, fontsize=32, pad=25, x=0.5)
+    ax.set_xlabel('Population (billions)', fontsize=20)
+    ax.set_ylabel('tons / capita', fontsize=20)
+   
+    
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(billion_formatter))
+    ax.set_xticklabels([f'{pop}' for pop in [0, 0, 1, 2, 3, 4, 5, 6, 7]])
+    ax.yaxis.set_tick_params(labelsize=18)
+    ax.xaxis.set_tick_params(labelsize=18)
+    
+    ax.yaxis.set_tick_params(labelsize=20)
+    ax.xaxis.set_tick_params(labelsize=20)
+    
+    # Add horizontal lines for reference
+    for y in [20, 40, 60]:
+        ax.axhline(y=y, color='gray', linestyle='--', linewidth=1)
+        
+    # Create the custom legend elements
+    white_patch_blue_line = mpatches.Patch(facecolor='blue', edgecolor='#3b4cc0', alpha=0.3,linewidth=4, label='Existing DLS stocks (regional mean)') 
+    white_patch_red_line = mpatches.Patch(facecolor='white', edgecolor='black',alpha=0.4, linewidth=4, label='DLS stock gap: current practices (regional mean)')
+    #white_patch_red_line_blue_fill = mpatches.Patch(facecolor='#3b4cc080', edgecolor='#b40426', linewidth=4, label='DLS stocks threshold (mean) below existing DLS stocks')
+
+    line_with_marker = mlines.Line2D([], [], color='black', marker='o', markersize=10, alpha=0.4, label='country variation within each region (min,med,max)')
+    line_with_marker_grandf = mlines.Line2D([], [], color='red', alpha=0.4, marker='+', markersize=10, label='DLS stock threshold: converged practices (min,mean,max)')
+    
+    legend = ax.legend(handles=[white_patch_blue_line, white_patch_red_line, line_with_marker, line_with_marker_grandf],
+          loc='upper right', fontsize=20,  ncol=1, title = 'DLS material stocks, Ø per capita (scale: countries entire population)', 
+          title_fontsize=20) # bbox_to_anchor=(0.05, -0.095),
+    legend.get_title().set_ha('left')  # Or 'right' or 'center'
+    
+    
+    ax.set_xlim(0 - 50000, cumulative_population + 50000)
+    plt.tight_layout()
+    #fig.savefig("Fig_2b.pdf", bbox_inches='tight')
+    plt.show()
+    plt.close('all')
+    
 
 
 def plot_country_distribution_one_converge_small_current(df, converge_df, items, title):
@@ -2564,325 +2761,533 @@ def plot_country_distribution_one_converge_small_current(df, converge_df, items,
     plt.close("all")
 
 
+# def plot_country_distribution_one_withTotal(df, items, converge_df):
+#     # Calculate stats and populations for the first item to determine the R11 order
+#     first_item_stats = (
+#         df.groupby("R11")[items[0]]
+#         .agg(["mean", "min", "max", "median"])
+#         .sort_values(by="mean", ascending=False)
+#     )
+#     populations = (
+#         df.groupby("R11")["population_R11"]
+#         .first()
+#         .reindex(index=first_item_stats.index)
+#     )
+#     # replace mean, as not population weighted above
+#     first_item_stats["mean"] = (
+#         df.set_index(["region", "R11"])[items[0]]
+#         * df.set_index(["region", "R11"])["population_countries"]
+#     ).groupby("R11").sum() / df.set_index(["region", "R11"])[
+#         "population_countries"
+#     ].groupby("R11").sum()
+#     first_item_stats = first_item_stats.sort_values(by="mean", ascending=False)
+#     populations = (
+#         df.groupby("R11")["population_R11"]
+#         .first()
+#         .reindex(index=first_item_stats.index)
+#     )
+
+#     converge_stats = (
+#         converge_df.groupby("R11")["value_cap"]
+#         .agg(["mean", "min", "max", "median"])
+#         .sort_values(by="mean", ascending=False)
+#     )
+#     converge_stats["mean"] = (
+#         converge_df.set_index(["region", "R11"])["value_cap"]
+#         * converge_df.set_index(["region", "R11"])["population_countries"]
+#     ).groupby("R11").sum() / converge_df.set_index(["region", "R11"])[
+#         "population_countries"
+#     ].groupby("R11").sum()
+#     converge_stats = converge_stats.sort_values(by="mean", ascending=False) / 1e3
+#     # sort by height
+#     # unique_R11 = ((df.set_index(['region','R11'])[items[2]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()).sort_values(ascending=False).index
+#     # sort by preset order
+#     unique_R11 = [
+#         "CPA",
+#         "EEU",
+#         "WEU",
+#         "FSU",
+#         "NAM",
+#         "PAO",
+#         "LAM",
+#         "AFR",
+#         "MEA",
+#         "PAS",
+#         "SAS",
+#     ]
+#     colors = plt.cm.get_cmap("tab20", len(unique_R11))
+#     color_dict = {R11: colors(i) for i, R11 in enumerate(unique_R11)}
+
+#     # Create a single figure and axis
+#     fig, ax = plt.subplots(figsize=(22, 8))
+
+#     # Define x-axis formatter for billions
+#     def billion_formatter(x, pos):
+#         return f"{int(x / 1e3)}B"
+
+#     cumulative_population = 0  # Initialize cumulative population
+#     x_positions = []  # Store x positions for setting x-ticks later
+
+#     # Create the legend
+#     region_full_names = {
+#         "AFR": "Subs. Africa",
+#         "CPA": "Centrally planned Asia",
+#         "EEU": "E. Europe",
+#         "FSU": "Former Soviet Union",
+#         "LAM": "Latin America",
+#         "MEA": "N. Africa & Middle East",
+#         "NAM": "North America",
+#         "PAO": "JP, AU, NZ",
+#         "PAS": "Pacific Asia",
+#         "SAS": "South Asia",
+#         "WEU": "W. Europe",
+#     }
+
+#     for R11 in unique_R11:
+#         width = populations[R11]  # Population as bar width
+
+#         # Get the mean values for all three items
+#         mean_value_1 = first_item_stats.loc[R11, "mean"]
+#         stats_item2 = (
+#             df.groupby("R11")[items[1]]
+#             .agg(["mean", "min", "max", "median"])
+#             .reindex(index=unique_R11)
+#         )
+#         # replace mean, as not population weighted above
+#         stats_item2["mean"] = (
+#             df.set_index(["region", "R11"])[items[1]]
+#             * df.set_index(["region", "R11"])["population_countries"]
+#         ).groupby("R11").sum() / df.set_index(["region", "R11"])[
+#             "population_countries"
+#         ].groupby("R11").sum()
+#         stats_item2 = stats_item2.reindex(index=unique_R11)
+#         mean_value_2 = stats_item2.loc[R11, "mean"] - mean_value_1
+
+#         stats_item3 = (
+#             df.groupby("R11")[items[2]]
+#             .agg(["mean", "min", "max", "median"])
+#             .reindex(index=unique_R11)
+#         )
+#         # replace mean, as not population weighted above
+#         stats_item3["mean"] = (
+#             df.set_index(["region", "R11"])[items[2]]
+#             * df.set_index(["region", "R11"])["population_countries"]
+#         ).groupby("R11").sum() / df.set_index(["region", "R11"])[
+#             "population_countries"
+#         ].groupby("R11").sum()
+#         stats_item3 = stats_item3.reindex(index=unique_R11)
+#         mean_value_3 = stats_item3.loc[R11, "mean"] - mean_value_1 - mean_value_2
+
+#         # Plot bar for the first item
+#         ax.bar(
+#             cumulative_population + width / 2,
+#             mean_value_1,
+#             width=width,
+#             edgecolor="#3b4cc0",
+#             facecolor="white",
+#             linewidth=4,
+#         )
+
+#         # Calculate the alpha based on the proportion of mean_value_1 in the total
+#         total_value = mean_value_1 + mean_value_2
+#         alpha_value = (
+#             mean_value_1 / total_value if total_value != 0 else 0
+#         )  # Avoid division by zero
+
+#         # Set the bar with the dynamically calculated alpha for facecolor
+#         ax.bar(
+#             cumulative_population + width / 2,
+#             mean_value_1,
+#             width=width,
+#             edgecolor=(0.23, 0.30, 0.75, 0.5),  # Edgecolor with fixed alpha
+#             facecolor="#3b4cc0",  # Face color
+#             alpha=alpha_value * 0.4,  # Dynamic alpha based on the ratio
+#             linewidth=4,
+#         )
+
+#         # Stack the bar for the second item on top of the first
+#         ax.bar(
+#             cumulative_population + width / 2,
+#             mean_value_2,
+#             width=width,
+#             edgecolor="black",
+#             facecolor="white",
+#             alpha=0.8,
+#             bottom=mean_value_1,
+#             linewidth=4,
+#         )
+
+#         # Stack the bar for the third item on top of the second
+#         ax.bar(
+#             cumulative_population + width / 2,
+#             mean_value_3,
+#             width=width,
+#             edgecolor="black",
+#             hatch=".",
+#             facecolor="white",
+#             alpha=0.6,
+#             bottom=mean_value_1 + mean_value_2,
+#             linewidth=4,
+#         )
+
+#         # Plot statistical markers for the first item
+#         min_value_1 = first_item_stats.loc[R11, "min"]
+#         max_value_1 = first_item_stats.loc[R11, "max"]
+#         med_value_1 = first_item_stats.loc[R11, "median"]
+#         ax.plot(
+#             cumulative_population + width / 2,
+#             med_value_1,
+#             "o",
+#             color="#3b4cc0",
+#             markersize=10,
+#             alpha=0.4,
+#         )
+
+#         ax.vlines(
+#             cumulative_population + width / 2,
+#             min_value_1,
+#             max_value_1,
+#             color="#3b4cc0",
+#             lw=4,
+#             alpha=0.4,
+#         )
+
+#         # Plot statistical markers for the second item
+#         min_value_2 = stats_item2.loc[R11, "min"]
+#         max_value_2 = stats_item2.loc[R11, "max"]
+#         med_value_2 = stats_item2.loc[R11, "median"]
+#         ax.plot(
+#             cumulative_population + width / 2 + (width / 8),
+#             med_value_2,
+#             "o",
+#             color="black",
+#             markersize=10,
+#             alpha=0.4,
+#         )
+#         ax.vlines(
+#             cumulative_population + width / 2 + (width / 8),
+#             min_value_2,
+#             max_value_2,
+#             color="black",
+#             lw=4,
+#             alpha=0.4,
+#         )
+
+#         # Plot statistical markers for the third item
+#         min_value_3 = stats_item3.loc[R11, "min"]
+#         max_value_3 = stats_item3.loc[R11, "max"]
+#         med_value_3 = stats_item3.loc[R11, "median"]
+#         ax.plot(
+#             cumulative_population + width / 2 + (width / 4),
+#             med_value_3,
+#             "o",
+#             color="black",
+#             markersize=10,
+#             alpha=0.4,
+#         )
+#         ax.vlines(
+#             cumulative_population + width / 2 + (width / 4),
+#             min_value_3,
+#             max_value_3,
+#             color="black",
+#             lw=4,
+#             linestyle=":",
+#             alpha=0.8,
+#         )
+
+#         cumulative_population += width
+#         x_positions.append(
+#             cumulative_population - width / 2
+#         )  # Center position for x-ticks
+
+#     # ax.set_title("Country variation of material stocks providing existing DLS-levels, to close DLS gaps & beyond-DLS", fontsize=32, pad=50, x=0.5)
+#     ax.set_xlabel("Population (billions)", fontsize=20)
+#     ax.set_ylabel("tons / capita", fontsize=20)
+
+#     ax.xaxis.set_major_formatter(plt.FuncFormatter(billion_formatter))
+#     ax.set_xticklabels([f"{pop}" for pop in [0, 0, 1, 2, 3, 4, 5, 6, 7]])
+#     ax.yaxis.set_tick_params(labelsize=18)
+#     ax.xaxis.set_tick_params(labelsize=18)
+
+#     ax.yaxis.set_tick_params(labelsize=20)
+#     ax.xaxis.set_tick_params(labelsize=20)
+
+#     # Add horizontal lines for reference
+#     for y in [50, 100, 150, 200, 250, 300]:
+#         ax.axhline(y=y, color="gray", linestyle="--", linewidth=1)
+
+#     # Create the custom legend elements
+#     white_patch_blue_line = mpatches.Patch(
+#         facecolor="white",
+#         edgecolor="#3b4cc0",
+#         linewidth=4,
+#         alpha=0.4,
+#         label="Existing DLS stocks (mean)",
+#     )
+#     white_patch_red_line = mpatches.Patch(
+#         facecolor="white",
+#         edgecolor="black",
+#         linewidth=4,
+#         alpha=0.4,
+#         label="DLS stock gap: current practices (mean)",
+#     )
+#     white_patch_green_line = mpatches.Patch(
+#         facecolor="white",
+#         edgecolor="black",
+#         linewidth=4,
+#         hatch=".",
+#         alpha=0.4,
+#         label="Difference to existing economy-wide stocks (mean)",
+#     )
+
+#     line_with_marker = mlines.Line2D(
+#         [],
+#         [],
+#         color="black",
+#         linestyle=":",
+#         marker="o",
+#         markersize=8,
+#         label="Country variation within each region (min, med, max)",
+#     )
+
+#     legend = ax.legend(
+#         handles=[
+#             white_patch_blue_line,
+#             white_patch_red_line,
+#             white_patch_green_line,
+#             line_with_marker,
+#         ],
+#         loc="upper right",
+#         fontsize=20,
+#         ncol=1,
+#         title="Material stocks, Ø per capita (scale: countries entire population)",
+#         title_fontsize=20,
+#     )
+
+#     legend.get_title().set_ha("left")  # Or 'right' or 'center'
+
+#     # ax.set_title("(c) Country variation of material stocks for DLS\n against economy-wide stocks", fontsize=28, pad=50, x=0.5)
+#     ax.set_title(
+#         "(c) Region & country variation of DLS material stocks against economy-wide stocks",
+#         fontsize=32,
+#         pad=25,
+#         x=0.5,
+#     )
+#     ax.set_xlim(0 - 50000, cumulative_population + 50000)
+#     ax.set_ylim(0, 350)
+#     plt.tight_layout()
+#     plt.show()
+#     plt.close("all")
+    
+    
 def plot_country_distribution_one_withTotal(df, items, converge_df):
     # Calculate stats and populations for the first item to determine the R11 order
-    first_item_stats = (
-        df.groupby("R11")[items[0]]
-        .agg(["mean", "min", "max", "median"])
-        .sort_values(by="mean", ascending=False)
-    )
-    populations = (
-        df.groupby("R11")["population_R11"]
-        .first()
-        .reindex(index=first_item_stats.index)
-    )
-    # replace mean, as not population weighted above
-    first_item_stats["mean"] = (
-        df.set_index(["region", "R11"])[items[0]]
-        * df.set_index(["region", "R11"])["population_countries"]
-    ).groupby("R11").sum() / df.set_index(["region", "R11"])[
-        "population_countries"
-    ].groupby("R11").sum()
-    first_item_stats = first_item_stats.sort_values(by="mean", ascending=False)
-    populations = (
-        df.groupby("R11")["population_R11"]
-        .first()
-        .reindex(index=first_item_stats.index)
-    )
-
-    converge_stats = (
-        converge_df.groupby("R11")["value_cap"]
-        .agg(["mean", "min", "max", "median"])
-        .sort_values(by="mean", ascending=False)
-    )
-    converge_stats["mean"] = (
-        converge_df.set_index(["region", "R11"])["value_cap"]
-        * converge_df.set_index(["region", "R11"])["population_countries"]
-    ).groupby("R11").sum() / converge_df.set_index(["region", "R11"])[
-        "population_countries"
-    ].groupby("R11").sum()
-    converge_stats = converge_stats.sort_values(by="mean", ascending=False) / 1e3
+    first_item_stats = df.groupby('R11')[items[0]].agg(['mean', 'min', 'max', 'median']).sort_values(by='mean', ascending=False)
+    populations = df.groupby('R11')['population_R11'].first().reindex(index=first_item_stats.index)
+    #replace mean, as not population weighted above
+    first_item_stats['mean'] = (df.set_index(['region','R11'])[items[0]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
+    first_item_stats =  first_item_stats.sort_values(by='mean', ascending=False)
+    populations = df.groupby('R11')['population_R11'].first().reindex(index=first_item_stats.index)
+    
+    converge_stats = converge_df.groupby('R11')['value_cap'].agg(['mean','min', 'max', 'median']).sort_values(by='mean', ascending=False)
+    converge_stats['mean'] = (converge_df.set_index(['region','R11'])['value_cap'] * converge_df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / converge_df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
+    converge_stats =  converge_stats.sort_values(by='mean', ascending=False) /1e3
     # sort by height
-    # unique_R11 = ((df.set_index(['region','R11'])[items[2]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()).sort_values(ascending=False).index
+    #unique_R11 = ((df.set_index(['region','R11'])[items[2]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()).sort_values(ascending=False).index
     # sort by preset order
-    unique_R11 = [
-        "CPA",
-        "EEU",
-        "WEU",
-        "FSU",
-        "NAM",
-        "PAO",
-        "LAM",
-        "AFR",
-        "MEA",
-        "PAS",
-        "SAS",
-    ]
-    colors = plt.cm.get_cmap("tab20", len(unique_R11))
+    unique_R11 = ['CPA','EEU','WEU','FSU','NAM','PAO','LAM','AFR','MEA','PAS','SAS']
+    colors = plt.cm.get_cmap('tab20', len(unique_R11))
     color_dict = {R11: colors(i) for i, R11 in enumerate(unique_R11)}
-
+    
     # Create a single figure and axis
     fig, ax = plt.subplots(figsize=(22, 8))
-
+    
     # Define x-axis formatter for billions
     def billion_formatter(x, pos):
-        return f"{int(x / 1e3)}B"
-
+        return f'{int(x / 1e3)}B'
+    
     cumulative_population = 0  # Initialize cumulative population
     x_positions = []  # Store x positions for setting x-ticks later
-
+    
     # Create the legend
     region_full_names = {
-        "AFR": "Subs. Africa",
-        "CPA": "Centrally planned Asia",
-        "EEU": "E. Europe",
-        "FSU": "Former Soviet Union",
-        "LAM": "Latin America",
-        "MEA": "N. Africa & Middle East",
-        "NAM": "North America",
-        "PAO": "JP, AU, NZ",
-        "PAS": "Pacific Asia",
-        "SAS": "South Asia",
-        "WEU": "W. Europe",
+        'AFR': 'Subs. Africa',
+        'CPA': 'Centrally planned Asia',
+        'EEU': 'E. Europe',
+        'FSU': 'Former Soviet Union',
+        'LAM': 'Latin America',
+        'MEA': 'N. Africa & Middle East',
+        'NAM': 'North America',
+        'PAO': 'JP, AU, NZ',
+        'PAS': 'Pacific Asia',
+        'SAS': 'South Asia',
+        'WEU': 'W. Europe'
     }
 
     for R11 in unique_R11:
         width = populations[R11]  # Population as bar width
 
         # Get the mean values for all three items
-        mean_value_1 = first_item_stats.loc[R11, "mean"]
-        stats_item2 = (
-            df.groupby("R11")[items[1]]
-            .agg(["mean", "min", "max", "median"])
-            .reindex(index=unique_R11)
-        )
-        # replace mean, as not population weighted above
-        stats_item2["mean"] = (
-            df.set_index(["region", "R11"])[items[1]]
-            * df.set_index(["region", "R11"])["population_countries"]
-        ).groupby("R11").sum() / df.set_index(["region", "R11"])[
-            "population_countries"
-        ].groupby("R11").sum()
-        stats_item2 = stats_item2.reindex(index=unique_R11)
-        mean_value_2 = stats_item2.loc[R11, "mean"] - mean_value_1
-
-        stats_item3 = (
-            df.groupby("R11")[items[2]]
-            .agg(["mean", "min", "max", "median"])
-            .reindex(index=unique_R11)
-        )
-        # replace mean, as not population weighted above
-        stats_item3["mean"] = (
-            df.set_index(["region", "R11"])[items[2]]
-            * df.set_index(["region", "R11"])["population_countries"]
-        ).groupby("R11").sum() / df.set_index(["region", "R11"])[
-            "population_countries"
-        ].groupby("R11").sum()
-        stats_item3 = stats_item3.reindex(index=unique_R11)
-        mean_value_3 = stats_item3.loc[R11, "mean"] - mean_value_1 - mean_value_2
-
+        mean_value_1 = first_item_stats.loc[R11, 'mean']
+        stats_item2 = df.groupby('R11')[items[1]].agg(['mean', 'min', 'max', 'median']).reindex(index=unique_R11)
+        #replace mean, as not population weighted above
+        stats_item2['mean'] = (df.set_index(['region','R11'])[items[1]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
+        stats_item2 =  stats_item2.reindex(index=unique_R11)
+        mean_value_2 = stats_item2.loc[R11, 'mean'] - mean_value_1
+        
+        stats_item3 = df.groupby('R11')[items[2]].agg(['mean', 'min', 'max', 'median']).reindex(index=unique_R11)
+        #replace mean, as not population weighted above
+        stats_item3['mean'] = (df.set_index(['region','R11'])[items[2]] * df.set_index(['region','R11'])['population_countries']).groupby('R11').sum() / df.set_index(['region','R11'])['population_countries'].groupby('R11').sum()
+        stats_item3 =  stats_item3.reindex(index=unique_R11)
+        mean_value_3 = stats_item3.loc[R11, 'mean'] - mean_value_1 - mean_value_2
+        
         # Plot bar for the first item
-        ax.bar(
-            cumulative_population + width / 2,
-            mean_value_1,
-            width=width,
-            edgecolor="#3b4cc0",
-            facecolor="white",
-            linewidth=4,
-        )
-
+        ax.bar(cumulative_population + width / 2, mean_value_1, width=width, edgecolor='#3b4cc0',
+               facecolor='white', linewidth=4)
+        
         # Calculate the alpha based on the proportion of mean_value_1 in the total
         total_value = mean_value_1 + mean_value_2
-        alpha_value = (
-            mean_value_1 / total_value if total_value != 0 else 0
-        )  # Avoid division by zero
+        alpha_value = mean_value_1 / total_value if total_value != 0 else 0  # Avoid division by zero
 
-        # Set the bar with the dynamically calculated alpha for facecolor
+            # Set the bar with the dynamically calculated alpha for facecolor
         ax.bar(
-            cumulative_population + width / 2,
-            mean_value_1,
-            width=width,
-            edgecolor=(0.23, 0.30, 0.75, 0.5),  # Edgecolor with fixed alpha
-            facecolor="#3b4cc0",  # Face color
-            alpha=alpha_value * 0.4,  # Dynamic alpha based on the ratio
-            linewidth=4,
-        )
+    cumulative_population + width / 2,
+    mean_value_1,
+    width=width,
+    edgecolor=(0.23, 0.30, 0.75, 0.5),  # Edgecolor with fixed alpha
+    facecolor='#3b4cc0',  # Face color
+    alpha=alpha_value*0.4,  # Dynamic alpha based on the ratio
+    linewidth=4
+)
+
 
         # Stack the bar for the second item on top of the first
-        ax.bar(
-            cumulative_population + width / 2,
-            mean_value_2,
-            width=width,
-            edgecolor="black",
-            facecolor="white",
-            alpha=0.8,
-            bottom=mean_value_1,
-            linewidth=4,
-        )
-
+        ax.bar(cumulative_population + width / 2, mean_value_2, width=width, edgecolor='black',
+               facecolor='white', alpha=0.8, bottom=mean_value_1, linewidth=4)
+        
         # Stack the bar for the third item on top of the second
-        ax.bar(
-            cumulative_population + width / 2,
-            mean_value_3,
-            width=width,
-            edgecolor="black",
-            hatch=".",
-            facecolor="white",
-            alpha=0.6,
-            bottom=mean_value_1 + mean_value_2,
-            linewidth=4,
-        )
-
+        ax.bar(cumulative_population + width / 2, mean_value_3, width=width, edgecolor="black", hatch= '.',
+               facecolor='white',  alpha=0.6, bottom=mean_value_1 + mean_value_2, linewidth=4)
+        
         # Plot statistical markers for the first item
-        min_value_1 = first_item_stats.loc[R11, "min"]
-        max_value_1 = first_item_stats.loc[R11, "max"]
-        med_value_1 = first_item_stats.loc[R11, "median"]
-        ax.plot(
-            cumulative_population + width / 2,
-            med_value_1,
-            "o",
-            color="#3b4cc0",
-            markersize=10,
-            alpha=0.4,
-        )
-
-        ax.vlines(
-            cumulative_population + width / 2,
-            min_value_1,
-            max_value_1,
-            color="#3b4cc0",
-            lw=4,
-            alpha=0.4,
-        )
-
+        min_value_1 = first_item_stats.loc[R11, 'min']
+        max_value_1 = first_item_stats.loc[R11, 'max']
+        med_value_1 = first_item_stats.loc[R11, 'median']
+        ax.plot(cumulative_population + width / 2, med_value_1, 'o', color='#3b4cc0', markersize=10, alpha=0.4)
+    
+        ax.vlines(cumulative_population + width / 2, min_value_1, max_value_1, color='#3b4cc0', lw=4, alpha=0.4)
+        
+        
         # Plot statistical markers for the second item
-        min_value_2 = stats_item2.loc[R11, "min"]
-        max_value_2 = stats_item2.loc[R11, "max"]
-        med_value_2 = stats_item2.loc[R11, "median"]
-        ax.plot(
-            cumulative_population + width / 2 + (width / 8),
-            med_value_2,
-            "o",
-            color="black",
-            markersize=10,
-            alpha=0.4,
-        )
-        ax.vlines(
-            cumulative_population + width / 2 + (width / 8),
-            min_value_2,
-            max_value_2,
-            color="black",
-            lw=4,
-            alpha=0.4,
-        )
-
+        min_value_2 = stats_item2.loc[R11, 'min']
+        max_value_2 = stats_item2.loc[R11, 'max']
+        med_value_2 = stats_item2.loc[R11, 'median']
+        ax.plot(cumulative_population + width / 2 + (width / 8), med_value_2, 'o', color='black', markersize=10, alpha=0.4)
+        ax.vlines(cumulative_population + width / 2 + (width / 8), min_value_2, max_value_2, color='black', lw=4, alpha=0.4)
+        
         # Plot statistical markers for the third item
-        min_value_3 = stats_item3.loc[R11, "min"]
-        max_value_3 = stats_item3.loc[R11, "max"]
-        med_value_3 = stats_item3.loc[R11, "median"]
-        ax.plot(
-            cumulative_population + width / 2 + (width / 4),
-            med_value_3,
-            "o",
-            color="black",
-            markersize=10,
-            alpha=0.4,
-        )
-        ax.vlines(
-            cumulative_population + width / 2 + (width / 4),
-            min_value_3,
-            max_value_3,
-            color="black",
-            lw=4,
-            linestyle=":",
-            alpha=0.8,
-        )
-
+        min_value_3 = stats_item3.loc[R11, 'min']
+        max_value_3 = stats_item3.loc[R11, 'max']
+        med_value_3 = stats_item3.loc[R11, 'median']
+        ax.plot(cumulative_population + width / 2 + (width / 4), med_value_3, 'o', color='black', markersize=10, alpha=0.4)
+        ax.vlines(cumulative_population + width / 2 + (width / 4), min_value_3, max_value_3, color='black', lw=4, linestyle = ':', alpha=0.8)
+        
+        region_full_names_to_plot = {
+            'AFR': 'Subs.Africa',
+            'CPA': 'Centrally planned Asia',
+            'EEU': 'E.\nEU',
+            'FSU': 'F.Sov.\nUnion',
+            'LAM': 'L. America',
+            'MEA': 'N. Africa &\nM. East',
+            'NAM': 'N.Am-\nerica',
+            'PAO': 'JP, \nAU, NZ',
+            'PAS': 'Pacific\nAsia',
+            'SAS': 'South Asia',
+            'WEU': 'W.\nEU'
+            }
+        
+        region_names_position = {
+            'AFR': 40,
+            'CPA': 4.5,
+            'EEU': 10,
+            'FSU': 177,
+            'LAM': 5.5,
+            'MEA': 110,
+            'NAM': 6.5,
+            'PAO': 200,
+            'PAS': 65,
+            'SAS': 40,
+            'WEU': 7.5
+            }
+        
+        region_names_position_horiz = {
+            'AFR': cumulative_population + width / 2.3,
+            'CPA': cumulative_population + width / 2,
+            'EEU': cumulative_population + width / 2,
+            'FSU': cumulative_population + width / 2,
+            'LAM': cumulative_population + width / 2,
+            'MEA': cumulative_population + width / 5,
+            'NAM': cumulative_population + width / 2,
+            'PAO': cumulative_population + width / 0.8,
+            'PAS': cumulative_population + width / 2.5,
+            'SAS': cumulative_population + width / 2,
+            'WEU': cumulative_population + width / 2,
+            }
+        
+        ax.text(region_names_position_horiz[R11], region_names_position[R11], region_full_names_to_plot[R11],  
+                ha='center', va='bottom', fontsize=18, color='black', rotation= 0)
+        
         cumulative_population += width
-        x_positions.append(
-            cumulative_population - width / 2
-        )  # Center position for x-ticks
+        x_positions.append(cumulative_population - width / 2)  # Center position for x-ticks
+    
+    #ax.set_title("Country variation of material stocks providing existing DLS-levels, to close DLS gaps & beyond-DLS", fontsize=32, pad=50, x=0.5)
 
-    # ax.set_title("Country variation of material stocks providing existing DLS-levels, to close DLS gaps & beyond-DLS", fontsize=32, pad=50, x=0.5)
-    ax.set_xlabel("Population (billions)", fontsize=20)
-    ax.set_ylabel("tons / capita", fontsize=20)
-
+    ax.set_xlabel('Population (billions)', fontsize=20) #labelpad=15
+    #ax.xaxis.set_label_coords(0.05, -0.05)  
+    ax.set_ylabel('tons / capita', fontsize=20)
+    
     ax.xaxis.set_major_formatter(plt.FuncFormatter(billion_formatter))
-    ax.set_xticklabels([f"{pop}" for pop in [0, 0, 1, 2, 3, 4, 5, 6, 7]])
+    #ax.set_xticklabels([f'{pop}' for pop in [0, 0, '', '', '', '', '', '', 7]])
+    ax.set_xticklabels([f'{pop}' for pop in [0, 0, 1, 2, 3, 4, 5, 6, 7]])
     ax.yaxis.set_tick_params(labelsize=18)
     ax.xaxis.set_tick_params(labelsize=18)
-
+    
     ax.yaxis.set_tick_params(labelsize=20)
     ax.xaxis.set_tick_params(labelsize=20)
+    
+    # # Turn off tick lines for positions with empty labels
+    # for tick, label in zip(ax.xaxis.get_major_ticks(), ax.get_xticklabels()):
+    #     if label.get_text() == '':
+    #         tick.tick1line.set_visible(False)  # bottom tick line
+    #         tick.tick2line.set_visible(False)  # top tick line
 
+    
     # Add horizontal lines for reference
     for y in [50, 100, 150, 200, 250, 300]:
-        ax.axhline(y=y, color="gray", linestyle="--", linewidth=1)
-
+        ax.axhline(y=y, color='gray', linestyle='--', linewidth=1)
+        
     # Create the custom legend elements
-    white_patch_blue_line = mpatches.Patch(
-        facecolor="white",
-        edgecolor="#3b4cc0",
-        linewidth=4,
-        alpha=0.4,
-        label="Existing DLS stocks (mean)",
-    )
-    white_patch_red_line = mpatches.Patch(
-        facecolor="white",
-        edgecolor="black",
-        linewidth=4,
-        alpha=0.4,
-        label="DLS stock gap: current practices (mean)",
-    )
-    white_patch_green_line = mpatches.Patch(
-        facecolor="white",
-        edgecolor="black",
-        linewidth=4,
-        hatch=".",
-        alpha=0.4,
-        label="Difference to existing economy-wide stocks (mean)",
-    )
+    white_patch_blue_line = mpatches.Patch(facecolor='blue', edgecolor='#3b4cc0', linewidth=4, alpha=0.3, label='Existing DLS stocks (regional mean)')
+    white_patch_red_line = mpatches.Patch(facecolor='white', edgecolor='black', linewidth=4, alpha=0.4, label='DLS stock gap: current practices (regional mean)')
+    white_patch_green_line = mpatches.Patch(facecolor='white', edgecolor='black', linewidth=4, hatch = '.',  alpha=0.4,label='Difference to existing economy-wide stocks (regional mean)')
 
-    line_with_marker = mlines.Line2D(
-        [],
-        [],
-        color="black",
-        linestyle=":",
-        marker="o",
-        markersize=8,
-        label="Country variation within each region (min, med, max)",
-    )
-
-    legend = ax.legend(
-        handles=[
-            white_patch_blue_line,
-            white_patch_red_line,
-            white_patch_green_line,
-            line_with_marker,
-        ],
-        loc="upper right",
-        fontsize=20,
-        ncol=1,
-        title="Material stocks, Ø per capita (scale: countries entire population)",
-        title_fontsize=20,
-    )
-
-    legend.get_title().set_ha("left")  # Or 'right' or 'center'
-
-    # ax.set_title("(c) Country variation of material stocks for DLS\n against economy-wide stocks", fontsize=28, pad=50, x=0.5)
-    ax.set_title(
-        "(c) Region & country variation of DLS material stocks against economy-wide stocks",
-        fontsize=32,
-        pad=25,
-        x=0.5,
-    )
+    line_with_marker = mlines.Line2D([], [], color='black', linestyle = ':', marker='o', markersize=8, label='Country variation within each region (min, med, max)')
+    
+    legend = ax.legend(handles=[white_patch_blue_line, white_patch_red_line, white_patch_green_line, line_with_marker], 
+      loc='upper right', fontsize=20, ncol=1, title='Material stocks, Ø per capita (scale: countries entire population)',
+      title_fontsize=20)
+    
+    legend.get_title().set_ha('left')  # Or 'right' or 'center'
+    
+    
+    ax.set_title("(c) Region & country variation of DLS material stocks against economy-wide stocks", fontsize=32, pad=25, x=0.5)
     ax.set_xlim(0 - 50000, cumulative_population + 50000)
-    ax.set_ylim(0, 350)
+    ax.set_ylim(0,300)
     plt.tight_layout()
+    #fig.savefig("Fig_2c.pdf", bbox_inches='tight')
     plt.show()
-    plt.close("all")
-    
-    
+    plt.close('all')
+        
     
     
     
@@ -3858,82 +4263,927 @@ def plot_bars_horiz_gap_headroom_two_subplots_doubleGlob_mod(
     plt.tight_layout()
     plt.subplots_adjust(hspace=0.6)
     plt.show()
-    # fig.savefig('Fig2_DLSbeyond.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
     plt.close("all")
 
+## OLD
+# def plot_bars_Vert_gap_headroom_two_subplots_doubleGlob_mod_eff(
+#     df1,
+#     df2,
+#     df3,
+#     df_add_beyond_stocks_regional,
+#     df_add_beyond_stocks_global,
+#     global_stocks,
+#     global_stock_prod,
+#     subcategory,
+#     line_y_values,
+#     line_labels,
+#     DLS_stock_thresh_eff_glob,
+#     DLS_stock_thresh_eff_cap,
+# ):
+#     grouped_df1 = df1.groupby(["region", subcategory]).sum()
+#     grouped_df2 = df2.groupby(["region", subcategory]).sum()
+#     grouped_df3 = df3.set_index(["region", subcategory]).groupby("region").sum()
 
-def plot_bars_Vert_gap_headroom_two_subplots_doubleGlob_mod_eff(
-    df1,
-    df2,
-    df3,
-    df_add_beyond_stocks_regional,
-    df_add_beyond_stocks_global,
-    global_stocks,
-    global_stock_prod,
-    subcategory,
-    line_y_values,
-    line_labels,
-    DLS_stock_thresh_eff_glob,
-    DLS_stock_thresh_eff_cap,
-):
-    grouped_df1 = df1.groupby(["region", subcategory]).sum()
-    grouped_df2 = df2.groupby(["region", subcategory]).sum()
-    grouped_df3 = df3.set_index(["region", subcategory]).groupby("region").sum()
+#     grouped_df1 = pd.DataFrame(grouped_df1.sum(axis=1)).rename(columns={0: "stock"})
+#     grouped_df2 = pd.DataFrame(grouped_df2.sum(axis=1)).rename(columns={0: "stock"})
+#     grouped_df3 = pd.DataFrame(grouped_df3.sum(axis=1)).rename(columns={0: "line"})
 
-    grouped_df1 = pd.DataFrame(grouped_df1.sum(axis=1)).rename(columns={0: "stock"})
-    grouped_df2 = pd.DataFrame(grouped_df2.sum(axis=1)).rename(columns={0: "stock"})
-    grouped_df3 = pd.DataFrame(grouped_df3.sum(axis=1)).rename(columns={0: "line"})
+#     # Creating a single dataframe for plotting
+#     combined_df = pd.concat([grouped_df1, grouped_df2], axis=1, keys=["df1", "df2"])
+#     combined_df.columns = combined_df.columns.map("_".join)
+#     combined_df = combined_df / 1e3  # Convert to t/cap
+#     combined_df.reset_index(inplace=True)
+#     region_order = [
+#         "CPA",
+#         "EEU",
+#         "WEU",
+#         "FSU",
+#         "NAM",
+#         "PAO",
+#         "LAM",
+#         "AFR",
+#         "MEA",
+#         "PAS",
+#         "SAS",
+#     ]
+#     sector_order = [
+#         "res_buildings",
+#         "nonres_buildings",
+#         "other_construction",
+#         "road_rail",
+#         "transport_machinery",
+#         "machinery",
+#         "other",
+#     ]
+
+#     # Create a mapping of region to the custom order
+#     order_mapping = {region: i for i, region in enumerate(region_order)}
+#     # Create a mapping of sector to the custom order
+#     order_mapping_sector = {sector: i for i, sector in enumerate(sector_order)}
+
+#     # Map the 'region' column to a new column that represents its order
+#     combined_df["region_order"] = combined_df["region"].map(order_mapping)
+#     # Sort the DataFrame by the new 'region_order' column, then drop it
+
+#     # Map the 'sector' column to a new column that represents its order
+#     combined_df["sector_order"] = combined_df["sector"].map(order_mapping_sector)
+#     # Sort the DataFrame by the new 'sector_order' column, then drop it
+#     combined_df_sorted = combined_df.sort_values(
+#         by=["region_order", "sector_order"]
+#     ).drop(columns=["sector_order"])
+
+#     combined_df = combined_df_sorted.set_index(["region", "sector"])
+
+#     # also reorder global_stock_prod and global_stock
+#     global_stock_prod = global_stock_prod.reindex(sector_order)
+#     global_stocks = global_stocks.reindex(["minerals", "metals", "biomass", "fossils"])
+
+#     # Create the figure
+#     fig = plt.figure(figsize=(24, 28))
+
+#     # Create a 2-row, 2-column grid
+#     gs = gridspec.GridSpec(2, 2, height_ratios=[2, 2.1], width_ratios=[4.5, 2])
+
+#     # First panel spans only the first column of the first row (half-width)
+#     ax0 = fig.add_subplot(gs[0, 0])
+
+#     # Second panel spans both columns of the second row (full width)
+#     ax2 = fig.add_subplot(gs[1, :])
+
+#     # Optional: Hide the unused top-right space (gs[0, 1])
+#     fig.add_subplot(gs[0, 1]).axis("off")
+
+#     global_stocks_products = global_stock_prod.groupby("region", axis=1).sum()
+
+#     from matplotlib.patches import FancyBboxPatch
+
+#     # Materials and their colors
+#     materials = global_stocks.index
+#     sectors = global_stocks_products.index
+#     colors = [
+#         (0.6, 0.58, 0.58),
+#         (0.18, 0.46, 0.71),
+#         (0.44, 0.68, 0.28),
+#         (0.93, 0.40, 0.19),
+#     ]
+#     colors2 = plt.cm.get_cmap("Pastel2", len(sectors))
+#     # replace grey color in pastel2 so it is not confuesd with grey in variable colors
+#     colors_array = colors2(np.arange(len(sectors)))
+#     replacement_color = [1.0, 0.5, 0.5, 1.0]  # Replace with a red-like RGBA
+#     colors_array[-1] = replacement_color  # Replace gray with your chosen color
+#     from matplotlib.colors import ListedColormap
+
+#     custom_cmap = ListedColormap(colors_array)
+#     colors2 = custom_cmap
+#     # rearrange color order:
+#     # Extract the colors as an array
+#     colors3 = colors2(np.arange(colors2.N))
+#     # Define your custom order for the colors (example: swap the first and last color)
+#     custom_order = [4, 1, 6, 5, 3, 0, 2]  # Adjust based on the desired order
+#     # Reorder the colors based on the custom order
+#     reordered_colors = colors3[custom_order]
+#     # Create a new colormap with the reordered colors
+#     colors2 = ListedColormap(reordered_colors)
+
+#     # Adjust hatching patterns for keys
+#     key_hatch = {"DLS_prov": "", "beyond_DLS": "."}
+
+#     # adjust so that values are in Gigatons
+#     global_stocks_products = global_stocks_products / 1e9
+#     global_stocks = global_stocks / 1e9
+#     DLS_stock_thresh_eff_glob = DLS_stock_thresh_eff_glob / 1e9
+
+#     double_bar = 0.4
+
+#     # Function to create rounded vertical bars
+#     def plot_rounded_barv(ax, x, height, bottom=0, color=None, hatch=None, alpha=None):
+#         boxstyle = "round,pad=0"
+#         bar_width = 0.175  # Consistent width for all bars
+
+#         # Outline with opaque black edge
+#         outline_bbox = FancyBboxPatch(
+#             (x - bar_width, bottom),
+#             bar_width * 2,
+#             height,
+#             boxstyle=boxstyle,
+#             ec="black",
+#             fc="none",
+#             hatch=hatch,
+#             lw=1.5,
+#         )
+#         ax.add_patch(outline_bbox)
+
+#         # Filled bar with transparency if color is provided
+#         if color is not None:
+#             fill_bbox = FancyBboxPatch(
+#                 (x - bar_width, bottom),
+#                 bar_width * 2,
+#                 height,
+#                 boxstyle=boxstyle,
+#                 ec="none",
+#                 fc=color,
+#                 hatch=hatch,
+#                 lw=0,
+#                 alpha=alpha,
+#             )
+#             ax.add_patch(fill_bbox)
+
+#     left_bar_x = -0.425  # shift further left
+#     right_bar_x = 0.075  # closer to center
+
+#     # Plot bars for global stocks of products (now vertical)
+#     bottom = 0
+#     for key in ["DLS_prov", "beyond_DLS"]:
+#         for mat_idx, sector in enumerate(sectors):
+#             value = global_stocks_products.loc[sector, key]
+#             hatch = key_hatch.get(key)
+#             if key == "DLS_prov":
+#                 plot_rounded_barv(
+#                     ax0,
+#                     left_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=colors2(mat_idx),
+#                     hatch=hatch,
+#                     alpha=1,
+#                 )
+#                 plot_rounded_barv(
+#                     ax0,
+#                     left_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=None,
+#                     hatch=hatch,
+#                     alpha=1,
+#                 )
+#             if key == "beyond_DLS":
+#                 plot_rounded_barv(
+#                     ax0,
+#                     left_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=colors2(mat_idx),
+#                     hatch=hatch,
+#                     alpha=0.6,
+#                 )
+#                 plot_rounded_barv(
+#                     ax0,
+#                     left_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=None,
+#                     hatch=hatch,
+#                     alpha=1,
+#                 )
+#             bottom += value
+
+#     # Plot bars for global stocks of materials (now vertical)
+#     bottom = 0
+#     for key in ["DLS_prov", "beyond_DLS"]:
+#         for mat_idx, material in enumerate(materials):
+#             value = global_stocks.loc[material, key]
+#             hatch = key_hatch.get(key)
+#             if key == "DLS_prov":
+#                 plot_rounded_barv(
+#                     ax0,
+#                     right_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=colors[mat_idx],
+#                     hatch=hatch,
+#                     alpha=1,
+#                 )
+#                 plot_rounded_barv(
+#                     ax0,
+#                     right_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=None,
+#                     hatch=hatch,
+#                     alpha=1,
+#                 )
+#             if key == "beyond_DLS":
+#                 plot_rounded_barv(
+#                     ax0,
+#                     right_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=colors[mat_idx],
+#                     hatch=hatch,
+#                     alpha=0.6,
+#                 )
+#                 plot_rounded_barv(
+#                     ax0,
+#                     right_bar_x,
+#                     value,
+#                     bottom=bottom,
+#                     color=None,
+#                     hatch=hatch,
+#                     alpha=1,
+#                 )
+#             bottom += value
+
+#     bottom_save = bottom
+
+#     # Add explicit legend entries for materials
+#     handles = [
+#         FancyBboxPatch((0, 0), 1, 1, boxstyle="round,pad=0.1", fc=color, ec="black")
+#         for color in colors
+#     ]
+#     labels = list(materials)  # Convert to a list
+
+#     # Plot the gap keys (now vertical bars)
+#     keys_to_plot_target = ["gap_targeted", "gap_regional", "gap_trickle"]
+#     letters = ["i", "+ii", "+iii"]
+
+#     for idx, key in enumerate(keys_to_plot_target):
+#         value = global_stocks[key].sum()
+#         plot_rounded_barv(
+#             ax0, left_bar_x, value, bottom=bottom, color="white", hatch="None"
+#         )
+#         plot_rounded_barv(ax0, left_bar_x, value, bottom=bottom, color=None, hatch=None)
+#         ax0.text(
+#             left_bar_x,
+#             bottom + value / 2,
+#             letters[idx],
+#             ha="center",
+#             va="center",
+#             fontsize=26,
+#         )
+#         if key == "gap_targeted":
+#             ax0.plot(
+#                 left_bar_x,
+#                 bottom + DLS_stock_thresh_eff_glob,
+#                 "+",
+#                 color="red",
+#                 markersize=24,
+#                 markeredgewidth=2,
+#             )
+#         bottom += value
+
+#     # Plot for the convergence gap (also vertical)
+#     keys_to_plot_all = ["gap_targeted", "gap_regional", "gap_trickle"]
+#     bottom = bottom_save
+
+#     for idx, key in enumerate(keys_to_plot_all):
+#         value = global_stocks[key].sum()
+#         plot_rounded_barv(
+#             ax0, right_bar_x, value, bottom=bottom, color="white", hatch=None
+#         )
+#         plot_rounded_barv(
+#             ax0, right_bar_x, value, bottom=bottom, color=None, hatch=None
+#         )
+#         ax0.text(
+#             right_bar_x,
+#             bottom + value / 2,
+#             letters[idx],
+#             ha="center",
+#             va="center",
+#             fontsize=24,
+#         )
+#         if key == "gap_targeted":
+#             ax0.plot(
+#                 right_bar_x,
+#                 bottom + DLS_stock_thresh_eff_glob,
+#                 "+",
+#                 color="red",
+#                 markersize=24,
+#                 markeredgewidth=2,
+#             )
+#         bottom += value
+
+#     # Set x-ticks to indicate the two "positions" (product vs material logic)
+#     ax0.set_xticks([left_bar_x, right_bar_x])
+#     ax0.set_xticklabels(["by product", "by material"], fontsize=26)
+#     for label in ax0.get_xticklabels():
+#         label.set_rotation(0)
+#     # Vertical axis is now the value scale
+#     ax0.set_ylim(0, bottom)
+#     ax0.set_xlim(-1, 1)
+
+#     # Adjust tick sizes and labels
+#     ax0.tick_params(axis="y", labelsize=26)
+#     ax0.tick_params(axis="x", labelsize=26)
+
+#     # Y-axis label replaces former X-axis label
+#     ax0.set_ylabel("[Gigatons = 10^9 tons]", fontsize=26, labelpad=20)
+
+#     ax0.ticklabel_format(style="plain", axis="y")
+
+#     # Brackets now apply along y-axis (vertical stacking) — no change needed unless you want to flip the orientation
+#     y_bracket_position = 0.68  # Remains meaningful vertically
+#     y_bracket_position_below = (
+#         -0.67
+#     )  # These would be x-coordinates if you want to flip them horizontally
+#     axlim = ax0.get_ylim()
+
+#     def draw_vertical_bracket(
+#         ax, y_start, y_end, x_position, label, label_offset=0.1, bracket_width=0.1
+#     ):
+#         """
+#         Draws a vertical bracket from y_start to y_end at a given x_position.
+#         """
+#         # Draw vertical line (bracket spine)
+#         ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+#         # Draw horizontal tips
+#         ax.plot(
+#             [x_position - bracket_width / 2, x_position + bracket_width / 2],
+#             [y_start, y_start],
+#             color="black",
+#             lw=1.5,
+#         )
+#         ax.plot(
+#             [x_position - bracket_width / 2, x_position + bracket_width / 2],
+#             [y_end, y_end],
+#             color="black",
+#             lw=1.5,
+#         )
+#         # Add label
+#         ax.text(
+#             x_position + bracket_width * 1.2,
+#             (y_start + y_end) / 2,
+#             label,
+#             ha="left",
+#             va="center",
+#             fontsize=20,
+#         )
+
+#     def draw_vertical_bracket_right_label(
+#         ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05
+#     ):
+#         # Vertical line (spine)
+#         ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+#         # Tips point LEFT (towards left side)
+#         ax.plot(
+#             [x_position - bracket_width, x_position],
+#             [y_start, y_start],
+#             color="black",
+#             lw=1.5,
+#         )
+#         ax.plot(
+#             [x_position - bracket_width, x_position],
+#             [y_end, y_end],
+#             color="black",
+#             lw=1.5,
+#         )
+#         # Label on right
+#         ax.text(
+#             x_position + label_offset,
+#             (y_start + y_end) / 2,
+#             label,
+#             ha="left",
+#             va="center",
+#             fontsize=26,
+#         )
+
+#     def draw_vertical_bracket_right_label_up(
+#         ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05
+#     ):
+#         # Vertical line (spine)
+#         ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+#         # Tips point LEFT (towards left side)
+#         ax.plot(
+#             [x_position - bracket_width, x_position],
+#             [y_start, y_start],
+#             color="black",
+#             lw=1.5,
+#         )
+#         ax.plot(
+#             [x_position - bracket_width, x_position],
+#             [y_end, y_end],
+#             color="black",
+#             lw=1.5,
+#         )
+#         # Label on right
+#         ax.text(
+#             x_position + label_offset,
+#             (y_start + y_end) / 1.8,
+#             label,
+#             ha="left",
+#             va="center",
+#             fontsize=26,
+#         )
+
+#     def draw_vertical_bracket_left_label(
+#         ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05
+#     ):
+#         # Vertical line (spine)
+#         ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+#         # Tips point RIGHT (towards right side)
+#         ax.plot(
+#             [x_position, x_position + bracket_width],
+#             [y_start, y_start],
+#             color="black",
+#             lw=1.5,
+#         )
+#         ax.plot(
+#             [x_position, x_position + bracket_width],
+#             [y_end, y_end],
+#             color="black",
+#             lw=1.5,
+#         )
+#         # Label on left
+#         ax.text(
+#             x_position - label_offset,
+#             (y_start + y_end) / 2,
+#             label,
+#             ha="right",
+#             va="center",
+#             fontsize=26,
+#             rotation=90,
+#         )
+
+#     x_bracket_position = 0.5  # Adjust this to align with your bar or region
+
+#     space_keeper = 10
+#     draw_vertical_bracket_left_label(
+#         ax0,
+#         0.1 + space_keeper,
+#         699.4 - space_keeper,
+#         -0.7,
+#         label="existing economy-wide\n stocks in 2015",
+#     )
+#     # draw_vertical_bracket_left_label(ax0, 700 +space_keeper,  1399 -space_keeper, -0.7, label="net additions to stocks\n to close DLS gaps")
+
+#     draw_vertical_bracket_right_label(
+#         ax0, 0.1 + space_keeper, 193 - space_keeper, 0.35, label="existing\n DLS stocks"
+#     )
+#     draw_vertical_bracket_right_label(
+#         ax0,
+#         194.2 + space_keeper,
+#         699.4 - space_keeper,
+#         0.35,
+#         label="existing\n beyond-DLS\n stocks",
+#     )
+#     draw_vertical_bracket_right_label(
+#         ax0,
+#         699.4 + space_keeper,
+#         699.4 + 82.2 - space_keeper,
+#         0.5,
+#         label="DLS stock gap-\n scenario-i)",
+#     )
+#     draw_vertical_bracket_right_label_up(
+#         ax0,
+#         699.4 + space_keeper,
+#         699.4 + 82.2 + 146 - space_keeper,
+#         0.425,
+#         label="NAS- scenario-ii",
+#     )
+#     draw_vertical_bracket_right_label_up(
+#         ax0,
+#         699.4 + space_keeper,
+#         699.4 + 82.2 + 146 + 479.2 - space_keeper,
+#         0.35,
+#         label="net stock additions\n (NAS)- scenario-iii",
+#     )
+
+#     # Set final plot title
+#     ax0.set_title(
+#         "(a) Existings DLS & beyond-DLS stocks + additions closing DLS gaps:\n\n    ...GLOBAL, at scale",
+#         fontsize=38,
+#         loc="left",
+#         pad=35,
+#     )
+
+#     # Unique regions and dimensions for plotting
+#     regions = combined_df.index.get_level_values(0).unique()
+#     dimensions = sector_order
+
+#     # Assigning distinct colors and hatch patterns to each dimension and creating legend handles
+#     colors = plt.cm.get_cmap("Pastel2", len(dimensions))
+#     colors = colors2
+#     # hatches = ['x','x','x','x','x','x','x','x','x','x']
+#     hatches = ["", "", "", "", "", "", "", "", "", ""]
+#     hatches = [".", ".", ".", ".", ".", ".", ".", ".", ".", "."]
+#     legend_handles = []
+
+#     # Calculate cumulative population
+#     cumulative_population = np.cumsum(
+#         [0]
+#         + [
+#             1.55716e06,
+#             121426,
+#             497389,
+#             288469,
+#             360286,
+#             156532,
+#             618764,
+#             954920,
+#             469410,
+#             579769,
+#             1.74936e06,
+#         ]
+#     )
+
+#     # Sort regions
+#     regions = region_order
+
+#     # Plot each region
+#     for i, region in enumerate(regions):
+#         bottom_df1 = 0  # Bottom for df1 stack
+#         bottom_df2 = 0  # Bottom for df2 stack (starts at top of df1 stack)
+#         bottom_df3 = 0
+#         bottom_df4 = 0
+
+#         # Plot df1 and calculate total df1 value for the region
+#         for j, dimension in enumerate(dimensions):
+#             color = colors(j)
+#             hatch = hatches[j]
+#             df1_value = combined_df.loc[(region, dimension), "df1_stock"]
+#             ax2.bar(
+#                 (cumulative_population[i] + cumulative_population[i + 1])
+#                 / 2,  # x: center of region
+#                 df1_value,  # height
+#                 width=(
+#                     cumulative_population[i + 1] - cumulative_population[i]
+#                 ),  # bar width = population share
+#                 color=color,
+#                 edgecolor="black",
+#                 linewidth=1.5,
+#                 label=f"{dimension} (df1)",
+#                 bottom=bottom_df1,
+#                 alpha=1,
+#             )
+#             bottom_df1 += df1_value
+
+#             # Add legend handle for the first region
+#             if i == 0:
+#                 legend_handles.append(
+#                     plt.Rectangle((0, 0), 1, 1, color=color, alpha=1, edgecolor="black")
+#                 )
+
+#         # Plot df2 stacked on top of df1
+#         for j, dimension in enumerate(dimensions):
+#             color = colors(j)
+#             hatch = hatches[j]
+#             df2_value = combined_df.loc[(region, dimension), "df2_stock"]
+#             ax2.bar(
+#                 (cumulative_population[i] + cumulative_population[i + 1]) / 2,
+#                 df2_value,
+#                 width=(cumulative_population[i + 1] - cumulative_population[i]),
+#                 color=color,
+#                 edgecolor="none",
+#                 linewidth=1.5,
+#                 hatch=hatch,
+#                 label=f"{dimension} (df2)",
+#                 bottom=bottom_df1 + bottom_df2,
+#                 alpha=0.6,
+#             )
+#             # Overplot edges for hatches
+#             ax2.bar(
+#                 (cumulative_population[i] + cumulative_population[i + 1]) / 2,
+#                 df2_value,
+#                 width=(cumulative_population[i + 1] - cumulative_population[i]),
+#                 color="none",
+#                 edgecolor="black",
+#                 linewidth=1.5,
+#                 hatch=hatch,
+#                 bottom=bottom_df1 + bottom_df2,
+#                 alpha=1,
+#             )
+#             bottom_df2 += df2_value
+
+#         # df3 additional stock beyond df1+df2
+#         df3_value = (
+#             grouped_df3.loc[region, "line"] / 1e3
+#             - combined_df.loc[(region), "df1_stock"].sum()
+#         )
+#         ax2.bar(
+#             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
+#             df3_value,
+#             width=(cumulative_population[i + 1] - cumulative_population[i]),
+#             color="none",
+#             edgecolor="black",
+#             linewidth=1.5,
+#             label=f"{dimension} (df3)",
+#             bottom=bottom_df1 + bottom_df2,
+#         )
+
+#         # Red cross for DLS threshold
+#         ax2.plot(
+#             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
+#             bottom_df1 + bottom_df2 + DLS_stock_thresh_eff_cap.loc[region] / 1e3,
+#             "+",
+#             color="red",
+#             markersize=16,
+#             markeredgewidth=2,
+#         )
+
+#         # Annotate 'i'
+#         center_x = (cumulative_population[i] + cumulative_population[i + 1]) / 2
+#         center_y = bottom_df1 + bottom_df2 + df3_value / 2
+#         ax2.text(center_x, center_y, "i", ha="center", va="center", fontsize=24)
+
+#         bottom_df3 += df3_value
+
+#         # df4 - added beyond stocks regional
+#         ax2.bar(
+#             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
+#             df_add_beyond_stocks_regional[region] / 1e3,
+#             width=(cumulative_population[i + 1] - cumulative_population[i]),
+#             color="none",
+#             edgecolor="black",
+#             linewidth=1.5,
+#             bottom=bottom_df1 + bottom_df2 + bottom_df3,
+#         )
+
+#         center_y = (
+#             bottom_df1
+#             + bottom_df2
+#             + bottom_df3
+#             + df_add_beyond_stocks_regional[region] / 1e3 / 2
+#         )
+#         ax2.text(center_x, center_y, "+ii", ha="center", va="center", fontsize=24)
+
+#         bottom_df4 += df_add_beyond_stocks_regional[region] / 1e3
+
+#         # df5 - added beyond stocks global
+#         ax2.bar(
+#             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
+#             df_add_beyond_stocks_global[region] / 1e3,
+#             width=(cumulative_population[i + 1] - cumulative_population[i]),
+#             color="none",
+#             edgecolor="black",
+#             linewidth=1.5,
+#             bottom=bottom_df1 + bottom_df2 + bottom_df3 + bottom_df4,
+#         )
+
+#         if df_add_beyond_stocks_global[region] > 0:
+#             center_y = (
+#                 bottom_df1
+#                 + bottom_df2
+#                 + bottom_df3
+#                 + bottom_df4
+#                 + df_add_beyond_stocks_global[region] / 1e3 / 2
+#             )
+#             ax2.text(center_x, center_y, "+iii", ha="center", va="center", fontsize=24)
+
+#     # Legend labels
+#     legend_labels = [dim for dim in dimensions]
+
+#     # Dictionary mapping old labels to new labels
+#     replacement_dict = {
+#         "nonres_buildings": "nonresid. buildings",
+#         "other_construction": "civil engineering",
+#         "res_buildings": "resid. buildings",
+#         "road_rail": "road & rail",
+#         "transport_machinery": "transport vehicles",
+#     }
+
+#     # Replace labels using list comprehension
+#     legend_labels = [
+#         replacement_dict[label] if label in replacement_dict else label
+#         for label in legend_labels
+#     ]
+
+#     # Create custom markers using Unicode characters
+#     custom_marker_a = Line2D([0], [0], color="black", marker="$i$", markersize=12)
+#     custom_marker_b = Line2D([0], [0], color="black", marker="$ii$", markersize=12)
+#     custom_marker_c = Line2D([0], [0], color="black", marker="$iii$", markersize=12)
+
+#     legend_handles_frames = []
+#     legend_labels_frames = []
+
+#     custom_patch = Patch(facecolor="orange", alpha=1, edgecolor="black", linewidth=3)
+#     legend_handles_frames.append(custom_patch)
+#     legend_labels_frames.append("DLS stocks")
+
+#     import matplotlib.patches as patches
+
+#     # custom_patch = Patch(facecolor='orange', alpha=0.4, edgecolor='black', linewidth=3, hatch='x')
+#     custom_patch = patches.Rectangle(
+#         (0, 0), 1, 1, facecolor="orange", edgecolor="black", linewidth=3, hatch="x"
+#     )
+
+#     legend_handles_frames.append(custom_patch)
+#     legend_labels_frames.append("beyond-DLS stocks")
+
+#     custom_patch = Patch(facecolor="none", edgecolor="black")
+#     legend_handles_frames.append(custom_patch)
+#     legend_labels_frames.append("additions to close gap")
+
+#     # Create a custom patch with a hatch pattern
+#     custom_patch2 = Patch(
+#         facecolor="none", edgecolor=None, hatch=".", label="additions to close gap"
+#     )
+#     legend_handles.append(custom_patch2)
+#     legend_labels.append("beyond-DLS")
+
+#     # Create custom markers using Unicode characters for converged cross
+#     custom_marker_cross = Line2D([0], [0], color="red", marker="$+$", markersize=12, 
+#     linestyle='None')
+#     legend_handles.append(custom_marker_cross)
+#     legend_labels.append("scenario-i: conver-\nged practices")
+
+#     # Create custom markers using Unicode characters
+#     custom_marker_a = Line2D([0], [0], color="black", marker="$i$", markersize=12)
+#     custom_marker_b = Line2D([0], [0], color="black", marker="$ii$", markersize=12)
+#     custom_marker_c = Line2D([0], [0], color="black", marker="$iii$", markersize=12)
+
+#     legend_handles_frames.append(custom_marker_a)
+#     legend_labels_frames.append("only DLS")
+#     legend_handles_frames.append(custom_marker_b)
+#     legend_labels_frames.append("beyond-DLS: regional")
+#     legend_handles_frames.append(custom_marker_c)
+#     legend_labels_frames.append("beyond-DLS: global")
+
+#     line_x_values = [177.36999999999998]  # Replace with actual x-values
+#     line_labels = ["scenario-iii: economy-wide stock requirement (global)"]
+
+#     # Plot horizontal lines and add labels (switched axes)
+#     for x_value, label in zip(line_x_values, line_labels):
+#         ax2.axhline(y=x_value, color="gray", linestyle="--", linewidth=2)
+#         ax2.text(
+#             x=ax2.get_xlim()[1] / 2,  # start of x-axis
+#             y=x_value + 6,  # aligned to the line's y-position
+#             s=label,
+#             verticalalignment="center",  # centered on the line
+#             horizontalalignment="left",  # aligned to the left of the plot
+#             fontsize=20,
+#         )
+
+#     titlea = "..(b) REGIONAL, Ø per capita (scale: regions' entire population')"
+
+#     ax2.set_title(titlea, fontsize=38, loc="left", pad=35)
+#     ax2.set_xlim(0 - 50000, cumulative_population[-1] + 50000)
+
+#     # Calculate midpoints of the bars for the y-axis labels
+#     midpoints = (cumulative_population[:-1] + cumulative_population[1:]) / 2
+
+#     # Set y-ticks and y-tick labels to the midpoints of the bars
+#     ax2.set_xticks(midpoints)
+#     # ax2.set_xticklabels(['Eastern Europe', 'Western Europe', ' Japan, Australia, NZ', 'North America', 'Form. Soviet Union', 'Centr. planned Asia', 'N. Africa & M. East', 'Latin America', 'Pacific Asia', 'South Asia', 'Subsaharan Africa'], fontsize=24)
+#     ax2.set_xticklabels(
+#         [
+#             "Centr.\n planned Asia",
+#             "Eastern Europe",
+#             "Western Europe",
+#             "Form.\n Soviet Union",
+#             "North America",
+#             " Japan,\n Australia, NZ",
+#             "Latin America",
+#             "Subsaharan\n Africa",
+#             "N. Africa &\n M. East",
+#             "Pacific Asia",
+#             "South Asia",
+#         ],
+#         fontsize=28,
+#     )
+#     for label in ax2.get_xticklabels():
+#         label.set_rotation(45)
+#     # Optionally, adjust the font size of the tick labels on the x-axis as well
+#     ax2.tick_params(axis="y", labelsize=26)
+#     ax2.set_ylim(0, 240)
+#     ax2.set_ylabel("tons / capita", fontsize=26)
+
+#     fig_title = (
+#         "Existings stocks providing DLS & beyond-DLS + additions to close DLS gaps..."
+#     )
+
+#     # reorder legend for product groups
+#     legend_handles1 = [
+#         legend_handles[0],
+#         legend_handles[1],
+#         legend_handles[2],
+#         legend_handles[3],
+#         legend_handles[4],
+#         legend_handles[5],
+#         legend_handles[6],
+#     ]
+#     legend_labels1 = [
+#         legend_labels[0],
+#         legend_labels[1],
+#         legend_labels[2],
+#         legend_labels[3],
+#         legend_labels[4],
+#         legend_labels[5],
+#         legend_labels[6],
+#     ]
+#     legend_handles2 = [handles[0], handles[1], handles[2], handles[3]]
+#     legend_labels2 = [labels[0], labels[1], labels[2], labels[3]]
+#     legend_handles3 = [legend_handles[7], legend_handles[8]]
+#     legend_labels3 = [legend_labels[7], legend_labels[8]]
+
+#     # legend = fig.legend(legend_handles, legend_labels, loc='upper center', bbox_to_anchor=(0.58, 0.6), ncol=6, fontsize=20, title='  Stock of material groups          Stock of product groups', title_fontsize=20)
+#     legend1 = fig.legend(
+#         legend_handles1,
+#         legend_labels1,
+#         loc="upper center",
+#         bbox_to_anchor=(0.85, 0.91 + 0.035),
+#         ncol=1,
+#         fontsize=26,
+#         title="Stock of product groups",
+#         title_fontsize=26,
+#     )
+#     legend2 = fig.legend(
+#         legend_handles2,
+#         legend_labels2,
+#         loc="upper center",
+#         bbox_to_anchor=(0.85, 0.75 + 0.03),
+#         ncol=1,
+#         fontsize=26,
+#         title="Stock of material groups",
+#         title_fontsize=26,
+#     )
+#     legend3 = fig.legend(
+#         legend_handles3,
+#         legend_labels3,
+#         loc="upper center",
+#         bbox_to_anchor=(0.85, 0.65 + 0.025),
+#         ncol=1,
+#         fontsize=26,
+#         title="Other entries   ",
+#         title_fontsize=26,
+#     )
+
+#     for i in [legend1, legend2, legend3]:
+#         i.get_frame().set_edgecolor("grey")
+#         i.get_title().set_fontsize(26)
+#         i._legend_box.align = "left"  # Align title text
+#     plt.tight_layout()
+#     plt.subplots_adjust(hspace=0.3)
+#     plt.show()
+#     #fig.savefig("Fig_3.pdf", bbox_inches='tight')
+#     plt.close("all")
+    
+
+def plot_bars_Vert_gap_headroom_two_subplots_doubleGlob_mod_eff(df1, df2, df3, df_add_beyond_stocks_regional, df_add_beyond_stocks_global, global_stocks, global_stock_prod, subcategory, line_y_values, line_labels, DLS_stock_thresh_eff_glob, DLS_stock_thresh_eff_cap ):
+    grouped_df1 = df1.groupby(['region', subcategory]).sum()
+    grouped_df2 = df2.groupby(['region', subcategory]).sum()
+    grouped_df3 = df3.set_index(['region',subcategory]).groupby('region').sum()
+
+    grouped_df1 = pd.DataFrame(grouped_df1.sum(axis=1)).rename(columns={0: 'stock'})
+    grouped_df2 = pd.DataFrame(grouped_df2.sum(axis=1)).rename(columns={0: 'stock'})
+    grouped_df3 = pd.DataFrame(grouped_df3.sum(axis=1)).rename(columns={0: 'line'})
 
     # Creating a single dataframe for plotting
-    combined_df = pd.concat([grouped_df1, grouped_df2], axis=1, keys=["df1", "df2"])
-    combined_df.columns = combined_df.columns.map("_".join)
+    combined_df = pd.concat([grouped_df1, grouped_df2], axis=1, keys=['df1', 'df2'])
+    combined_df.columns = combined_df.columns.map('_'.join)
     combined_df = combined_df / 1e3  # Convert to t/cap
-    combined_df.reset_index(inplace=True)
-    region_order = [
-        "CPA",
-        "EEU",
-        "WEU",
-        "FSU",
-        "NAM",
-        "PAO",
-        "LAM",
-        "AFR",
-        "MEA",
-        "PAS",
-        "SAS",
-    ]
-    sector_order = [
-        "res_buildings",
-        "nonres_buildings",
-        "other_construction",
-        "road_rail",
-        "transport_machinery",
-        "machinery",
-        "other",
-    ]
-
+    combined_df .reset_index(inplace=True)
+    region_order = ['CPA','EEU','WEU','FSU','NAM','PAO','LAM','AFR','MEA','PAS','SAS']
+    sector_order = [ 'res_buildings', 'nonres_buildings', 'other_construction', 'road_rail','transport_machinery', 'machinery','other']
+        
     # Create a mapping of region to the custom order
     order_mapping = {region: i for i, region in enumerate(region_order)}
     # Create a mapping of sector to the custom order
     order_mapping_sector = {sector: i for i, sector in enumerate(sector_order)}
-
+    
     # Map the 'region' column to a new column that represents its order
-    combined_df["region_order"] = combined_df["region"].map(order_mapping)
+    combined_df ['region_order'] = combined_df ['region'].map(order_mapping)
     # Sort the DataFrame by the new 'region_order' column, then drop it
-
+    
     # Map the 'sector' column to a new column that represents its order
-    combined_df["sector_order"] = combined_df["sector"].map(order_mapping_sector)
+    combined_df ['sector_order'] = combined_df ['sector'].map(order_mapping_sector)
     # Sort the DataFrame by the new 'sector_order' column, then drop it
-    combined_df_sorted = combined_df.sort_values(
-        by=["region_order", "sector_order"]
-    ).drop(columns=["sector_order"])
-
-    combined_df = combined_df_sorted.set_index(["region", "sector"])
-
-    # also reorder global_stock_prod and global_stock
+    combined_df_sorted = combined_df.sort_values(by=['region_order', 'sector_order']).drop(columns=['sector_order'])
+    
+    combined_df = combined_df_sorted.set_index(['region','sector'])
+    
+    #also reorder global_stock_prod and global_stock
     global_stock_prod = global_stock_prod.reindex(sector_order)
-    global_stocks = global_stocks.reindex(["minerals", "metals", "biomass", "fossils"])
-
+    global_stocks = global_stocks.reindex(['minerals','metals','biomass','fossils'])
+    
     # Create the figure
     fig = plt.figure(figsize=(24, 28))
 
@@ -3942,805 +5192,485 @@ def plot_bars_Vert_gap_headroom_two_subplots_doubleGlob_mod_eff(
 
     # First panel spans only the first column of the first row (half-width)
     ax0 = fig.add_subplot(gs[0, 0])
-
+    
     # Second panel spans both columns of the second row (full width)
     ax2 = fig.add_subplot(gs[1, :])
 
     # Optional: Hide the unused top-right space (gs[0, 1])
-    fig.add_subplot(gs[0, 1]).axis("off")
-
-    global_stocks_products = global_stock_prod.groupby("region", axis=1).sum()
+    fig.add_subplot(gs[0, 1]).axis('off')
+    
+    global_stocks_products = global_stock_prod.groupby('region',axis=1).sum()   
 
     from matplotlib.patches import FancyBboxPatch
-
     # Materials and their colors
     materials = global_stocks.index
-    sectors = global_stocks_products.index
-    colors = [
-        (0.6, 0.58, 0.58),
-        (0.18, 0.46, 0.71),
-        (0.44, 0.68, 0.28),
-        (0.93, 0.40, 0.19),
-    ]
-    colors2 = plt.cm.get_cmap("Pastel2", len(sectors))
-    # replace grey color in pastel2 so it is not confuesd with grey in variable colors
+    sectors =    global_stocks_products.index
+    colors =[(0.6,0.58,0.58),(0.18,0.46,0.71),(0.44,0.68,0.28),(0.93,0.40,0.19)]
+    colors2 =plt.cm.get_cmap('Pastel2', len(sectors))
+    #replace grey color in pastel2 so it is not confuesd with grey in variable colors
     colors_array = colors2(np.arange(len(sectors)))
     replacement_color = [1.0, 0.5, 0.5, 1.0]  # Replace with a red-like RGBA
     colors_array[-1] = replacement_color  # Replace gray with your chosen color
     from matplotlib.colors import ListedColormap
-
     custom_cmap = ListedColormap(colors_array)
-    colors2 = custom_cmap
-    # rearrange color order:
-    # Extract the colors as an array
-    colors3 = colors2(np.arange(colors2.N))
+    colors2 =  custom_cmap
+    #rearrange color order:
+    #Extract the colors as an array
+    colors3  = colors2 (np.arange(colors2 .N))
     # Define your custom order for the colors (example: swap the first and last color)
-    custom_order = [4, 1, 6, 5, 3, 0, 2]  # Adjust based on the desired order
+    custom_order = [4,1,6,5,3,0,2]  # Adjust based on the desired order
     # Reorder the colors based on the custom order
     reordered_colors = colors3[custom_order]
     # Create a new colormap with the reordered colors
-    colors2 = ListedColormap(reordered_colors)
-
+    colors2  = ListedColormap(reordered_colors)
+      
     # Adjust hatching patterns for keys
-    key_hatch = {"DLS_prov": "", "beyond_DLS": "."}
-
+    key_hatch = {
+        'DLS_prov': '',
+        'beyond_DLS': '.'
+    }
+       
     # adjust so that values are in Gigatons
-    global_stocks_products = global_stocks_products / 1e9
-    global_stocks = global_stocks / 1e9
-    DLS_stock_thresh_eff_glob = DLS_stock_thresh_eff_glob / 1e9
-
+    global_stocks_products = global_stocks_products/1e9
+    global_stocks = global_stocks/1e9
+    DLS_stock_thresh_eff_glob = DLS_stock_thresh_eff_glob/1e9
+    
     double_bar = 0.4
-
-    # Function to create rounded vertical bars
+    
+        # Function to create rounded vertical bars
     def plot_rounded_barv(ax, x, height, bottom=0, color=None, hatch=None, alpha=None):
         boxstyle = "round,pad=0"
         bar_width = 0.175  # Consistent width for all bars
-
+    
         # Outline with opaque black edge
         outline_bbox = FancyBboxPatch(
-            (x - bar_width, bottom),
-            bar_width * 2,
-            height,
+            (x - bar_width, bottom), bar_width * 2, height,
             boxstyle=boxstyle,
-            ec="black",
-            fc="none",
+            ec='black',
+            fc='none',
             hatch=hatch,
-            lw=1.5,
+            lw=1.5
         )
         ax.add_patch(outline_bbox)
-
+    
         # Filled bar with transparency if color is provided
         if color is not None:
             fill_bbox = FancyBboxPatch(
-                (x - bar_width, bottom),
-                bar_width * 2,
-                height,
+                (x - bar_width, bottom), bar_width * 2, height,
                 boxstyle=boxstyle,
-                ec="none",
+                ec='none',
                 fc=color,
                 hatch=hatch,
                 lw=0,
-                alpha=alpha,
+                alpha=alpha
             )
             ax.add_patch(fill_bbox)
-
-    left_bar_x = -0.425  # shift further left
+    
+    left_bar_x = -0.425 # shift further left
     right_bar_x = 0.075  # closer to center
-
+    
     # Plot bars for global stocks of products (now vertical)
     bottom = 0
-    for key in ["DLS_prov", "beyond_DLS"]:
+    for key in ['DLS_prov', 'beyond_DLS']:
         for mat_idx, sector in enumerate(sectors):
             value = global_stocks_products.loc[sector, key]
             hatch = key_hatch.get(key)
-            if key == "DLS_prov":
-                plot_rounded_barv(
-                    ax0,
-                    left_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=colors2(mat_idx),
-                    hatch=hatch,
-                    alpha=1,
-                )
-                plot_rounded_barv(
-                    ax0,
-                    left_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=None,
-                    hatch=hatch,
-                    alpha=1,
-                )
-            if key == "beyond_DLS":
-                plot_rounded_barv(
-                    ax0,
-                    left_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=colors2(mat_idx),
-                    hatch=hatch,
-                    alpha=0.6,
-                )
-                plot_rounded_barv(
-                    ax0,
-                    left_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=None,
-                    hatch=hatch,
-                    alpha=1,
-                )
+            if key == 'DLS_prov':
+                plot_rounded_barv(ax0, left_bar_x , value, bottom=bottom, color=colors2(mat_idx), hatch=hatch, alpha=1)
+                plot_rounded_barv(ax0, left_bar_x , value, bottom=bottom, color=None, hatch=hatch, alpha=1)
+            if key == 'beyond_DLS':
+                plot_rounded_barv(ax0, left_bar_x , value, bottom=bottom, color=colors2(mat_idx), hatch=hatch, alpha=0.6)
+                plot_rounded_barv(ax0, left_bar_x , value, bottom=bottom, color=None, hatch=hatch, alpha=1)
             bottom += value
-
+    
     # Plot bars for global stocks of materials (now vertical)
     bottom = 0
-    for key in ["DLS_prov", "beyond_DLS"]:
+    for key in ['DLS_prov', 'beyond_DLS']:
         for mat_idx, material in enumerate(materials):
             value = global_stocks.loc[material, key]
             hatch = key_hatch.get(key)
-            if key == "DLS_prov":
-                plot_rounded_barv(
-                    ax0,
-                    right_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=colors[mat_idx],
-                    hatch=hatch,
-                    alpha=1,
-                )
-                plot_rounded_barv(
-                    ax0,
-                    right_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=None,
-                    hatch=hatch,
-                    alpha=1,
-                )
-            if key == "beyond_DLS":
-                plot_rounded_barv(
-                    ax0,
-                    right_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=colors[mat_idx],
-                    hatch=hatch,
-                    alpha=0.6,
-                )
-                plot_rounded_barv(
-                    ax0,
-                    right_bar_x,
-                    value,
-                    bottom=bottom,
-                    color=None,
-                    hatch=hatch,
-                    alpha=1,
-                )
+            if key == 'DLS_prov':
+                plot_rounded_barv(ax0,   right_bar_x , value, bottom=bottom, color=colors[mat_idx], hatch=hatch, alpha=1)
+                plot_rounded_barv(ax0,   right_bar_x , value, bottom=bottom, color=None, hatch=hatch, alpha=1)
+            if key == 'beyond_DLS':
+                plot_rounded_barv(ax0,   right_bar_x , value, bottom=bottom, color=colors[mat_idx], hatch=hatch, alpha=0.6)
+                plot_rounded_barv(ax0,   right_bar_x , value, bottom=bottom, color=None, hatch=hatch, alpha=1)
             bottom += value
-
+    
     bottom_save = bottom
-
-    # Add explicit legend entries for materials
-    handles = [
-        FancyBboxPatch((0, 0), 1, 1, boxstyle="round,pad=0.1", fc=color, ec="black")
-        for color in colors
-    ]
+    
+      # Add explicit legend entries for materials
+    handles = [FancyBboxPatch((0, 0), 1, 1, boxstyle="round,pad=0.1", fc=color, ec='black') for color in colors]
     labels = list(materials)  # Convert to a list
-
+    
     # Plot the gap keys (now vertical bars)
-    keys_to_plot_target = ["gap_targeted", "gap_regional", "gap_trickle"]
-    letters = ["i", "+ii", "+iii"]
-
+    keys_to_plot_target = ['gap_targeted', 'gap_regional', 'gap_trickle']
+    letters = ['i', '+ii', '+iii']
+    
     for idx, key in enumerate(keys_to_plot_target):
         value = global_stocks[key].sum()
-        plot_rounded_barv(
-            ax0, left_bar_x, value, bottom=bottom, color="white", hatch="None"
-        )
+        plot_rounded_barv(ax0, left_bar_x, value, bottom=bottom, color='white', hatch=None)
         plot_rounded_barv(ax0, left_bar_x, value, bottom=bottom, color=None, hatch=None)
-        ax0.text(
-            left_bar_x,
-            bottom + value / 2,
-            letters[idx],
-            ha="center",
-            va="center",
-            fontsize=26,
-        )
-        if key == "gap_targeted":
-            ax0.plot(
-                left_bar_x,
-                bottom + DLS_stock_thresh_eff_glob,
-                "+",
-                color="red",
-                markersize=24,
-                markeredgewidth=2,
-            )
+        ax0.text(left_bar_x, bottom + value / 2, letters[idx], ha='center', va='center', fontsize=26)
+        if key == 'gap_targeted':
+            ax0.plot(left_bar_x, bottom + DLS_stock_thresh_eff_glob, '+', color='red', markersize=24,markeredgewidth=2)
         bottom += value
-
+    
     # Plot for the convergence gap (also vertical)
-    keys_to_plot_all = ["gap_targeted", "gap_regional", "gap_trickle"]
+    keys_to_plot_all = ['gap_targeted', 'gap_regional', 'gap_trickle']
     bottom = bottom_save
-
+    
     for idx, key in enumerate(keys_to_plot_all):
         value = global_stocks[key].sum()
-        plot_rounded_barv(
-            ax0, right_bar_x, value, bottom=bottom, color="white", hatch=None
-        )
-        plot_rounded_barv(
-            ax0, right_bar_x, value, bottom=bottom, color=None, hatch=None
-        )
-        ax0.text(
-            right_bar_x,
-            bottom + value / 2,
-            letters[idx],
-            ha="center",
-            va="center",
-            fontsize=24,
-        )
-        if key == "gap_targeted":
-            ax0.plot(
-                right_bar_x,
-                bottom + DLS_stock_thresh_eff_glob,
-                "+",
-                color="red",
-                markersize=24,
-                markeredgewidth=2,
-            )
+        plot_rounded_barv(ax0, right_bar_x, value, bottom=bottom, color='white', hatch=None)
+        plot_rounded_barv(ax0, right_bar_x, value, bottom=bottom, color=None, hatch=None)
+        ax0.text(right_bar_x, bottom + value / 2, letters[idx], ha='center', va='center', fontsize=24)
+        if key == 'gap_targeted':
+            ax0.plot(right_bar_x, bottom + DLS_stock_thresh_eff_glob, '+', color='red', markersize=24, markeredgewidth=2)
         bottom += value
-
+    
     # Set x-ticks to indicate the two "positions" (product vs material logic)
-    ax0.set_xticks([left_bar_x, right_bar_x])
-    ax0.set_xticklabels(["by product", "by material"], fontsize=26)
+    ax0.set_xticks([left_bar_x , right_bar_x ])
+    ax0.set_xticklabels(['by product', 
+                          'by material'], fontsize=26)
     for label in ax0.get_xticklabels():
         label.set_rotation(0)
     # Vertical axis is now the value scale
     ax0.set_ylim(0, bottom)
     ax0.set_xlim(-1, 1)
-
+    
     # Adjust tick sizes and labels
-    ax0.tick_params(axis="y", labelsize=26)
-    ax0.tick_params(axis="x", labelsize=26)
-
+    ax0.tick_params(axis='y', labelsize=26)
+    ax0.tick_params(axis='x', labelsize=26)
+    
     # Y-axis label replaces former X-axis label
     ax0.set_ylabel("[Gigatons = 10^9 tons]", fontsize=26, labelpad=20)
+    
 
-    ax0.ticklabel_format(style="plain", axis="y")
-
+    ax0.ticklabel_format(style='plain', axis='y')  
+       
     # Brackets now apply along y-axis (vertical stacking) — no change needed unless you want to flip the orientation
     y_bracket_position = 0.68  # Remains meaningful vertically
-    y_bracket_position_below = (
-        -0.67
-    )  # These would be x-coordinates if you want to flip them horizontally
+    y_bracket_position_below = -0.67  # These would be x-coordinates if you want to flip them horizontally  
     axlim = ax0.get_ylim()
 
-    def draw_vertical_bracket(
-        ax, y_start, y_end, x_position, label, label_offset=0.1, bracket_width=0.1
-    ):
+    def draw_vertical_bracket(ax, y_start, y_end, x_position, label, label_offset=0.1, bracket_width=0.1):
         """
         Draws a vertical bracket from y_start to y_end at a given x_position.
         """
         # Draw vertical line (bracket spine)
-        ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+        ax.plot([x_position, x_position], [y_start, y_end], color='black', lw=1.5)
         # Draw horizontal tips
-        ax.plot(
-            [x_position - bracket_width / 2, x_position + bracket_width / 2],
-            [y_start, y_start],
-            color="black",
-            lw=1.5,
-        )
-        ax.plot(
-            [x_position - bracket_width / 2, x_position + bracket_width / 2],
-            [y_end, y_end],
-            color="black",
-            lw=1.5,
-        )
+        ax.plot([x_position - bracket_width/2, x_position + bracket_width/2], [y_start, y_start], color='black', lw=1.5)
+        ax.plot([x_position - bracket_width/2, x_position + bracket_width/2], [y_end, y_end], color='black', lw=1.5)
         # Add label
-        ax.text(
-            x_position + bracket_width * 1.2,
-            (y_start + y_end) / 2,
-            label,
-            ha="left",
-            va="center",
-            fontsize=20,
-        )
-
-    def draw_vertical_bracket_right_label(
-        ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05
-    ):
+        ax.text(x_position + bracket_width * 1.2, (y_start + y_end)/2, label,
+            ha='left', va='center', fontsize=20)
+        
+    def draw_vertical_bracket_right_label(ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05):
         # Vertical line (spine)
-        ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+        ax.plot([x_position, x_position], [y_start, y_end], color='black', lw=1.5)
         # Tips point LEFT (towards left side)
-        ax.plot(
-            [x_position - bracket_width, x_position],
-            [y_start, y_start],
-            color="black",
-            lw=1.5,
-        )
-        ax.plot(
-            [x_position - bracket_width, x_position],
-            [y_end, y_end],
-            color="black",
-            lw=1.5,
-        )
+        ax.plot([x_position - bracket_width, x_position], [y_start, y_start], color='black', lw=1.5)
+        ax.plot([x_position - bracket_width, x_position], [y_end, y_end], color='black', lw=1.5)
         # Label on right
-        ax.text(
-            x_position + label_offset,
-            (y_start + y_end) / 2,
-            label,
-            ha="left",
-            va="center",
-            fontsize=26,
-        )
-
-    def draw_vertical_bracket_right_label_up(
-        ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05
-    ):
+        ax.text(x_position + label_offset, (y_start + y_end)/2, label, ha='left', va='center', fontsize=26)
+        
+    def draw_vertical_bracket_right_label_up(ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05):
         # Vertical line (spine)
-        ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+        ax.plot([x_position, x_position], [y_start, y_end], color='black', lw=1.5)
         # Tips point LEFT (towards left side)
-        ax.plot(
-            [x_position - bracket_width, x_position],
-            [y_start, y_start],
-            color="black",
-            lw=1.5,
-        )
-        ax.plot(
-            [x_position - bracket_width, x_position],
-            [y_end, y_end],
-            color="black",
-            lw=1.5,
-        )
+        ax.plot([x_position - bracket_width, x_position], [y_start, y_start], color='black', lw=1.5)
+        ax.plot([x_position - bracket_width, x_position], [y_end, y_end], color='black', lw=1.5)
         # Label on right
-        ax.text(
-            x_position + label_offset,
-            (y_start + y_end) / 1.8,
-            label,
-            ha="left",
-            va="center",
-            fontsize=26,
-        )
-
-    def draw_vertical_bracket_left_label(
-        ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05
-    ):
+        ax.text(x_position + label_offset, (y_start + y_end)/1.8, label, ha='left', va='center', fontsize=26)
+        
+    def draw_vertical_bracket_left_label(ax, y_start, y_end, x_position, label, label_offset=0.05, bracket_width=0.05):
         # Vertical line (spine)
-        ax.plot([x_position, x_position], [y_start, y_end], color="black", lw=1.5)
+        ax.plot([x_position, x_position], [y_start, y_end], color='black', lw=1.5)
         # Tips point RIGHT (towards right side)
-        ax.plot(
-            [x_position, x_position + bracket_width],
-            [y_start, y_start],
-            color="black",
-            lw=1.5,
-        )
-        ax.plot(
-            [x_position, x_position + bracket_width],
-            [y_end, y_end],
-            color="black",
-            lw=1.5,
-        )
+        ax.plot([x_position, x_position + bracket_width], [y_start, y_start], color='black', lw=1.5)
+        ax.plot([x_position, x_position + bracket_width], [y_end, y_end], color='black', lw=1.5)
         # Label on left
-        ax.text(
-            x_position - label_offset,
-            (y_start + y_end) / 2,
-            label,
-            ha="right",
-            va="center",
-            fontsize=26,
-            rotation=90,
-        )
+        ax.text(x_position - label_offset, (y_start + y_end)/2, label, ha='right', va='center', fontsize=26, rotation=90)
+
 
     x_bracket_position = 0.5  # Adjust this to align with your bar or region
-
+    
     space_keeper = 10
-    draw_vertical_bracket_left_label(
-        ax0,
-        0.1 + space_keeper,
-        699.4 - space_keeper,
-        -0.7,
-        label="existing economy-wide\n stocks in 2015",
-    )
-    # draw_vertical_bracket_left_label(ax0, 700 +space_keeper,  1399 -space_keeper, -0.7, label="net additions to stocks\n to close DLS gaps")
-
-    draw_vertical_bracket_right_label(
-        ax0, 0.1 + space_keeper, 193 - space_keeper, 0.35, label="existing\n DLS stocks"
-    )
-    draw_vertical_bracket_right_label(
-        ax0,
-        194.2 + space_keeper,
-        699.4 - space_keeper,
-        0.35,
-        label="existing\n beyond-DLS\n stocks",
-    )
-    draw_vertical_bracket_right_label(
-        ax0,
-        699.4 + space_keeper,
-        699.4 + 82.2 - space_keeper,
-        0.5,
-        label="DLS stock gap-\n scenario-i)",
-    )
-    draw_vertical_bracket_right_label_up(
-        ax0,
-        699.4 + space_keeper,
-        699.4 + 82.2 + 146 - space_keeper,
-        0.425,
-        label="NAS- scenario-ii",
-    )
-    draw_vertical_bracket_right_label_up(
-        ax0,
-        699.4 + space_keeper,
-        699.4 + 82.2 + 146 + 479.2 - space_keeper,
-        0.35,
-        label="net stock additions\n (NAS)- scenario-iii",
-    )
-
+    draw_vertical_bracket_left_label(ax0, 0.1 +space_keeper,  699.4 -space_keeper, -0.7, label="existing economy-wide\n stocks in 2015")
+    #draw_vertical_bracket_left_label(ax0, 700 +space_keeper,  1399 -space_keeper, -0.7, label="net additions to stocks\n to close DLS gaps")
+    
+    draw_vertical_bracket_right_label(ax0, 0.1+space_keeper, 193-space_keeper, 0.35, label="existing\n DLS stocks")
+    draw_vertical_bracket_right_label(ax0, 194.2+space_keeper, 699.4-space_keeper, 0.35, label="existing\n beyond-DLS\n stocks")
+    draw_vertical_bracket_right_label(ax0, 699.4+space_keeper, 699.4+82.2-space_keeper, 0.5, label="DLS stock gap-\n scenario-i)")
+    draw_vertical_bracket_right_label_up(ax0, 699.4+space_keeper, 699.4+82.2+146-space_keeper, 0.425, label="NAS- scenario-ii")
+    draw_vertical_bracket_right_label_up(ax0, 699.4+space_keeper, 699.4+82.2+146+479.2-space_keeper, 0.35, label="net stock additions\n (NAS)- scenario-iii")
+    
     # Set final plot title
-    ax0.set_title(
-        "(a) Existings DLS & beyond-DLS stocks + additions closing DLS gaps:\n\n    ...GLOBAL, at scale",
-        fontsize=38,
-        loc="left",
-        pad=35,
-    )
+    ax0.set_title("(a) Existings DLS & beyond-DLS stocks + additions closing DLS gaps:\n    ...GLOBAL, at scale", fontsize=38, loc='left', pad=35)
 
     # Unique regions and dimensions for plotting
     regions = combined_df.index.get_level_values(0).unique()
-    dimensions = sector_order
-
+    dimensions = sector_order 
+    
     # Assigning distinct colors and hatch patterns to each dimension and creating legend handles
-    colors = plt.cm.get_cmap("Pastel2", len(dimensions))
+    colors = plt.cm.get_cmap('Pastel2', len(dimensions))
     colors = colors2
-    # hatches = ['x','x','x','x','x','x','x','x','x','x']
-    hatches = ["", "", "", "", "", "", "", "", "", ""]
-    hatches = [".", ".", ".", ".", ".", ".", ".", ".", ".", "."]
+    #hatches = ['x','x','x','x','x','x','x','x','x','x']
+    hatches = ['','','','','','','','','','']
+    hatches = ['.','.','.','.','.','.','.','.','.','.']
     legend_handles = []
-
+    
     # Calculate cumulative population
-    cumulative_population = np.cumsum(
-        [0]
-        + [
-            1.55716e06,
-            121426,
-            497389,
-            288469,
-            360286,
-            156532,
-            618764,
-            954920,
-            469410,
-            579769,
-            1.74936e06,
-        ]
-    )
+    cumulative_population = np.cumsum([0] + [1.55716e+06, 121426, 497389, 288469, 360286, 156532, 618764, 954920, 469410, 579769, 1.74936e+06])
 
     # Sort regions
-    regions = region_order
-
+    regions = region_order 
+    
     # Plot each region
     for i, region in enumerate(regions):
         bottom_df1 = 0  # Bottom for df1 stack
         bottom_df2 = 0  # Bottom for df2 stack (starts at top of df1 stack)
         bottom_df3 = 0
         bottom_df4 = 0
-
+        
         # Plot df1 and calculate total df1 value for the region
         for j, dimension in enumerate(dimensions):
             color = colors(j)
             hatch = hatches[j]
-            df1_value = combined_df.loc[(region, dimension), "df1_stock"]
+            df1_value = combined_df.loc[(region, dimension), 'df1_stock']
             ax2.bar(
-                (cumulative_population[i] + cumulative_population[i + 1])
-                / 2,  # x: center of region
-                df1_value,  # height
-                width=(
-                    cumulative_population[i + 1] - cumulative_population[i]
-                ),  # bar width = population share
+                (cumulative_population[i] + cumulative_population[i + 1]) / 2,  # x: center of region
+                df1_value,                                                    # height
+                width=(cumulative_population[i + 1] - cumulative_population[i]),  # bar width = population share
                 color=color,
-                edgecolor="black",
+                edgecolor='black',
                 linewidth=1.5,
-                label=f"{dimension} (df1)",
+                label=f'{dimension} (df1)',
                 bottom=bottom_df1,
-                alpha=1,
+                alpha=1
             )
             bottom_df1 += df1_value
-
+            
             # Add legend handle for the first region
             if i == 0:
                 legend_handles.append(
-                    plt.Rectangle((0, 0), 1, 1, color=color, alpha=1, edgecolor="black")
+                    plt.Rectangle((0, 0), 1, 1, color=color, alpha=1, edgecolor='black')
                 )
-
+    
         # Plot df2 stacked on top of df1
         for j, dimension in enumerate(dimensions):
             color = colors(j)
             hatch = hatches[j]
-            df2_value = combined_df.loc[(region, dimension), "df2_stock"]
+            df2_value = combined_df.loc[(region, dimension), 'df2_stock']
             ax2.bar(
                 (cumulative_population[i] + cumulative_population[i + 1]) / 2,
                 df2_value,
                 width=(cumulative_population[i + 1] - cumulative_population[i]),
                 color=color,
-                edgecolor="none",
+                edgecolor='none',
                 linewidth=1.5,
                 hatch=hatch,
-                label=f"{dimension} (df2)",
+                label=f'{dimension} (df2)',
                 bottom=bottom_df1 + bottom_df2,
-                alpha=0.6,
+                alpha=0.6
             )
             # Overplot edges for hatches
             ax2.bar(
                 (cumulative_population[i] + cumulative_population[i + 1]) / 2,
                 df2_value,
                 width=(cumulative_population[i + 1] - cumulative_population[i]),
-                color="none",
-                edgecolor="black",
+                color='none',
+                edgecolor='black',
                 linewidth=1.5,
                 hatch=hatch,
                 bottom=bottom_df1 + bottom_df2,
-                alpha=1,
+                alpha=1
             )
             bottom_df2 += df2_value
-
+    
         # df3 additional stock beyond df1+df2
-        df3_value = (
-            grouped_df3.loc[region, "line"] / 1e3
-            - combined_df.loc[(region), "df1_stock"].sum()
-        )
+        df3_value = grouped_df3.loc[region, 'line'] / 1e3 - combined_df.loc[(region), 'df1_stock'].sum()
         ax2.bar(
             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
             df3_value,
             width=(cumulative_population[i + 1] - cumulative_population[i]),
-            color="none",
-            edgecolor="black",
+            color='none',
+            edgecolor='black',
             linewidth=1.5,
-            label=f"{dimension} (df3)",
-            bottom=bottom_df1 + bottom_df2,
+            label=f'{dimension} (df3)',
+            bottom=bottom_df1 + bottom_df2
         )
-
+    
         # Red cross for DLS threshold
         ax2.plot(
             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
             bottom_df1 + bottom_df2 + DLS_stock_thresh_eff_cap.loc[region] / 1e3,
-            "+",
-            color="red",
+            '+',
+            color='red',
             markersize=16,
-            markeredgewidth=2,
-        )
-
+            markeredgewidth=2)
+    
         # Annotate 'i'
         center_x = (cumulative_population[i] + cumulative_population[i + 1]) / 2
         center_y = bottom_df1 + bottom_df2 + df3_value / 2
-        ax2.text(center_x, center_y, "i", ha="center", va="center", fontsize=24)
-
+        ax2.text(center_x, center_y, 'i', ha='center', va='center', fontsize=24)
+    
         bottom_df3 += df3_value
-
+    
         # df4 - added beyond stocks regional
         ax2.bar(
             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
             df_add_beyond_stocks_regional[region] / 1e3,
             width=(cumulative_population[i + 1] - cumulative_population[i]),
-            color="none",
-            edgecolor="black",
+            color='none',
+            edgecolor='black',
             linewidth=1.5,
-            bottom=bottom_df1 + bottom_df2 + bottom_df3,
+            bottom=bottom_df1 + bottom_df2 + bottom_df3
         )
-
-        center_y = (
-            bottom_df1
-            + bottom_df2
-            + bottom_df3
-            + df_add_beyond_stocks_regional[region] / 1e3 / 2
-        )
-        ax2.text(center_x, center_y, "+ii", ha="center", va="center", fontsize=24)
-
+    
+        center_y = bottom_df1 + bottom_df2 + bottom_df3 + df_add_beyond_stocks_regional[region] / 1e3 / 2
+        ax2.text(center_x, center_y, '+ii', ha='center', va='center', fontsize=24)
+    
         bottom_df4 += df_add_beyond_stocks_regional[region] / 1e3
-
+    
         # df5 - added beyond stocks global
         ax2.bar(
             (cumulative_population[i] + cumulative_population[i + 1]) / 2,
             df_add_beyond_stocks_global[region] / 1e3,
             width=(cumulative_population[i + 1] - cumulative_population[i]),
-            color="none",
-            edgecolor="black",
+            color='none',
+            edgecolor='black',
             linewidth=1.5,
-            bottom=bottom_df1 + bottom_df2 + bottom_df3 + bottom_df4,
+            bottom=bottom_df1 + bottom_df2 + bottom_df3 + bottom_df4
         )
-
+    
         if df_add_beyond_stocks_global[region] > 0:
-            center_y = (
-                bottom_df1
-                + bottom_df2
-                + bottom_df3
-                + bottom_df4
-                + df_add_beyond_stocks_global[region] / 1e3 / 2
-            )
-            ax2.text(center_x, center_y, "+iii", ha="center", va="center", fontsize=24)
+            center_y = bottom_df1 + bottom_df2 + bottom_df3 + bottom_df4 + df_add_beyond_stocks_global[region] / 1e3 / 2
+            ax2.text(center_x, center_y, '+iii', ha='center', va='center', fontsize=24)
 
+        
     # Legend labels
-    legend_labels = [dim for dim in dimensions]
-
+    legend_labels = [dim for dim in dimensions] 
+ 
     # Dictionary mapping old labels to new labels
     replacement_dict = {
-        "nonres_buildings": "nonresid. buildings",
-        "other_construction": "civil engineering",
-        "res_buildings": "resid. buildings",
-        "road_rail": "road & rail",
-        "transport_machinery": "transport vehicles",
+        'nonres_buildings': 'nonresid. buildings',
+        'other_construction': 'civil engineering',
+        'res_buildings': 'resid. buildings',
+        'road_rail': 'road & rail',
+        'transport_machinery': 'transport vehicles'
     }
-
+    
     # Replace labels using list comprehension
-    legend_labels = [
-        replacement_dict[label] if label in replacement_dict else label
-        for label in legend_labels
-    ]
-
+    legend_labels = [replacement_dict[label] if label in replacement_dict else label for label in legend_labels]
+    
+    
     # Create custom markers using Unicode characters
-    custom_marker_a = Line2D([0], [0], color="black", marker="$i$", markersize=12)
-    custom_marker_b = Line2D([0], [0], color="black", marker="$ii$", markersize=12)
-    custom_marker_c = Line2D([0], [0], color="black", marker="$iii$", markersize=12)
-
+    custom_marker_a = Line2D([0], [0], color='black', marker='$i$', markersize=12)
+    custom_marker_b = Line2D([0], [0], color='black', marker='$ii$', markersize=12)
+    custom_marker_c = Line2D([0], [0], color='black', marker='$iii$', markersize=12)
+    
     legend_handles_frames = []
     legend_labels_frames = []
-
-    custom_patch = Patch(facecolor="orange", alpha=1, edgecolor="black", linewidth=3)
+    
+    custom_patch = Patch(facecolor='orange', alpha=1, edgecolor='black', linewidth=3)
     legend_handles_frames.append(custom_patch)
-    legend_labels_frames.append("DLS stocks")
-
+    legend_labels_frames.append('DLS stocks')
+   
     import matplotlib.patches as patches
-
-    # custom_patch = Patch(facecolor='orange', alpha=0.4, edgecolor='black', linewidth=3, hatch='x')
-    custom_patch = patches.Rectangle(
-        (0, 0), 1, 1, facecolor="orange", edgecolor="black", linewidth=3, hatch="x"
-    )
+    #custom_patch = Patch(facecolor='orange', alpha=0.4, edgecolor='black', linewidth=3, hatch='x')
+    custom_patch = patches.Rectangle((0, 0), 1, 1, facecolor='orange', edgecolor='black', linewidth=3, hatch='x')
 
     legend_handles_frames.append(custom_patch)
-    legend_labels_frames.append("beyond-DLS stocks")
-
-    custom_patch = Patch(facecolor="none", edgecolor="black")
+    legend_labels_frames.append('beyond-DLS stocks')
+    
+    custom_patch = Patch(facecolor='none', edgecolor='black')
     legend_handles_frames.append(custom_patch)
-    legend_labels_frames.append("additions to close gap")
-
+    legend_labels_frames.append('additions to close gap')
+    
     # Create a custom patch with a hatch pattern
-    custom_patch2 = Patch(
-        facecolor="none", edgecolor=None, hatch=".", label="additions to close gap"
-    )
-    legend_handles.append(custom_patch2)
-    legend_labels.append("beyond-DLS")
-
+    custom_patch2 = Patch(facecolor='none', edgecolor=None, hatch='.', label='additions to close gap')
+    legend_handles.append(custom_patch2 )
+    legend_labels.append('beyond-DLS')
+    
     # Create custom markers using Unicode characters for converged cross
-    custom_marker_cross = Line2D([0], [0], color="red", marker="$+$", markersize=12, 
-    linestyle='None')
+    custom_marker_cross = Line2D([0], [0], color='red', marker='$+$', markersize=20, linewidth=0 )
     legend_handles.append(custom_marker_cross)
-    legend_labels.append("scenario-i: conver-\nged practices")
-
+    legend_labels.append('scenario-i: conver-\nged practices')
+    
     # Create custom markers using Unicode characters
-    custom_marker_a = Line2D([0], [0], color="black", marker="$i$", markersize=12)
-    custom_marker_b = Line2D([0], [0], color="black", marker="$ii$", markersize=12)
-    custom_marker_c = Line2D([0], [0], color="black", marker="$iii$", markersize=12)
-
+    custom_marker_a = Line2D([0], [0], color='black', marker='$i$', markersize=12)
+    custom_marker_b = Line2D([0], [0], color='black', marker='$ii$', markersize=12)
+    custom_marker_c = Line2D([0], [0], color='black', marker='$iii$', markersize=12)
+    
     legend_handles_frames.append(custom_marker_a)
-    legend_labels_frames.append("only DLS")
+    legend_labels_frames.append('only DLS')
     legend_handles_frames.append(custom_marker_b)
-    legend_labels_frames.append("beyond-DLS: regional")
+    legend_labels_frames.append('beyond-DLS: regional')
     legend_handles_frames.append(custom_marker_c)
-    legend_labels_frames.append("beyond-DLS: global")
-
+    legend_labels_frames.append('beyond-DLS: global')
+    
     line_x_values = [177.36999999999998]  # Replace with actual x-values
-    line_labels = ["scenario-iii: economy-wide stock requirement (global)"]
+    line_labels = ['scenario-iii: economy-wide stock requirement (global)']
 
     # Plot horizontal lines and add labels (switched axes)
     for x_value, label in zip(line_x_values, line_labels):
-        ax2.axhline(y=x_value, color="gray", linestyle="--", linewidth=2)
+        ax2.axhline(y=x_value, color='gray', linestyle='--', linewidth=2)
         ax2.text(
-            x=ax2.get_xlim()[1] / 2,  # start of x-axis
-            y=x_value + 6,  # aligned to the line's y-position
-            s=label,
-            verticalalignment="center",  # centered on the line
-            horizontalalignment="left",  # aligned to the left of the plot
-            fontsize=20,
-        )
+        x=ax2.get_xlim()[1]/2,   # start of x-axis
+        y=x_value+6,             # aligned to the line's y-position
+        s=label,
+        verticalalignment='center',  # centered on the line
+        horizontalalignment='left',  # aligned to the left of the plot
+        fontsize=20
+    )
 
+    
     titlea = "..(b) REGIONAL, Ø per capita (scale: regions' entire population')"
-
-    ax2.set_title(titlea, fontsize=38, loc="left", pad=35)
-    ax2.set_xlim(0 - 50000, cumulative_population[-1] + 50000)
-
+   
+    ax2.set_title(titlea , fontsize=38, loc='left',  pad=35) 
+    ax2.set_xlim(0-50000, cumulative_population[-1] +50000)
+    
     # Calculate midpoints of the bars for the y-axis labels
     midpoints = (cumulative_population[:-1] + cumulative_population[1:]) / 2
-
+    
     # Set y-ticks and y-tick labels to the midpoints of the bars
     ax2.set_xticks(midpoints)
-    # ax2.set_xticklabels(['Eastern Europe', 'Western Europe', ' Japan, Australia, NZ', 'North America', 'Form. Soviet Union', 'Centr. planned Asia', 'N. Africa & M. East', 'Latin America', 'Pacific Asia', 'South Asia', 'Subsaharan Africa'], fontsize=24)
-    ax2.set_xticklabels(
-        [
-            "Centr.\n planned Asia",
-            "Eastern Europe",
-            "Western Europe",
-            "Form.\n Soviet Union",
-            "North America",
-            " Japan,\n Australia, NZ",
-            "Latin America",
-            "Subsaharan\n Africa",
-            "N. Africa &\n M. East",
-            "Pacific Asia",
-            "South Asia",
-        ],
-        fontsize=28,
-    )
+    #ax2.set_xticklabels(['Eastern Europe', 'Western Europe', ' Japan, Australia, NZ', 'North America', 'Form. Soviet Union', 'Centr. planned Asia', 'N. Africa & M. East', 'Latin America', 'Pacific Asia', 'South Asia', 'Subsaharan Africa'], fontsize=24)
+    ax2.set_xticklabels(['Centr.\n planned Asia','Eastern Europe', 'Western Europe', 'Form.\n Soviet Union',  'North America', ' Japan,\n Australia, NZ', 'Latin America', 'Subsaharan\n Africa',  'N. Africa &\n M. East', 'Pacific Asia', 'South Asia'], fontsize=28)
     for label in ax2.get_xticklabels():
         label.set_rotation(45)
     # Optionally, adjust the font size of the tick labels on the x-axis as well
-    ax2.tick_params(axis="y", labelsize=26)
+    ax2.tick_params(axis='y', labelsize=26)
     ax2.set_ylim(0, 240)
-    ax2.set_ylabel("tons / capita", fontsize=26)
+    ax2.set_ylabel('tons / capita', fontsize=26)
 
-    fig_title = (
-        "Existings stocks providing DLS & beyond-DLS + additions to close DLS gaps..."
-    )
-
-    # reorder legend for product groups
-    legend_handles1 = [
-        legend_handles[0],
-        legend_handles[1],
-        legend_handles[2],
-        legend_handles[3],
-        legend_handles[4],
-        legend_handles[5],
-        legend_handles[6],
-    ]
-    legend_labels1 = [
-        legend_labels[0],
-        legend_labels[1],
-        legend_labels[2],
-        legend_labels[3],
-        legend_labels[4],
-        legend_labels[5],
-        legend_labels[6],
-    ]
-    legend_handles2 = [handles[0], handles[1], handles[2], handles[3]]
-    legend_labels2 = [labels[0], labels[1], labels[2], labels[3]]
-    legend_handles3 = [legend_handles[7], legend_handles[8]]
-    legend_labels3 = [legend_labels[7], legend_labels[8]]
-
-    # legend = fig.legend(legend_handles, legend_labels, loc='upper center', bbox_to_anchor=(0.58, 0.6), ncol=6, fontsize=20, title='  Stock of material groups          Stock of product groups', title_fontsize=20)
-    legend1 = fig.legend(
-        legend_handles1,
-        legend_labels1,
-        loc="upper center",
-        bbox_to_anchor=(0.85, 0.91 + 0.035),
-        ncol=1,
-        fontsize=26,
-        title="Stock of product groups",
-        title_fontsize=26,
-    )
-    legend2 = fig.legend(
-        legend_handles2,
-        legend_labels2,
-        loc="upper center",
-        bbox_to_anchor=(0.85, 0.75 + 0.03),
-        ncol=1,
-        fontsize=26,
-        title="Stock of material groups",
-        title_fontsize=26,
-    )
-    legend3 = fig.legend(
-        legend_handles3,
-        legend_labels3,
-        loc="upper center",
-        bbox_to_anchor=(0.85, 0.65 + 0.025),
-        ncol=1,
-        fontsize=26,
-        title="Other entries   ",
-        title_fontsize=26,
-    )
-
+    fig_title = 'Existings stocks providing DLS & beyond-DLS + additions to close DLS gaps...'
+   
+    #reorder legend for product groups
+    legend_handles1 = [legend_handles[0], legend_handles[1],  legend_handles[2], legend_handles[3], legend_handles[4],  legend_handles[5],legend_handles[6]]
+    legend_labels1 = [ legend_labels[0], legend_labels[1],    legend_labels[2],legend_labels[3], legend_labels[4], legend_labels[5],legend_labels[6]]
+    legend_handles2 = [handles[0],handles[1],handles[2],handles[3]]
+    legend_labels2 = [labels[0],labels[1],labels[2],labels[3]]
+    legend_handles3 = [legend_handles[7],legend_handles[8]]
+    legend_labels3 = [legend_labels[7],legend_labels[8]]
+    
+    #legend = fig.legend(legend_handles, legend_labels, loc='upper center', bbox_to_anchor=(0.58, 0.6), ncol=6, fontsize=20, title='  Stock of material groups          Stock of product groups', title_fontsize=20)
+    legend1 = fig.legend(legend_handles1, legend_labels1, loc='upper center', bbox_to_anchor=(0.85, 0.91+0.035), ncol=1, fontsize=26, title='Stock of product groups', title_fontsize=26)
+    legend2 = fig.legend(legend_handles2, legend_labels2, loc='upper center', bbox_to_anchor=(0.85, 0.75+0.03), ncol=1, fontsize=26, title='Stock of material groups', title_fontsize=26)
+    legend3 = fig.legend(legend_handles3, legend_labels3, loc='upper center', bbox_to_anchor=(0.85, 0.65+0.025), ncol=1, fontsize=26, title='Other entries   ', title_fontsize=26)
+    
     for i in [legend1, legend2, legend3]:
-        i.get_frame().set_edgecolor("grey")
+        i.get_frame().set_edgecolor('grey')
         i.get_title().set_fontsize(26)
         i._legend_box.align = "left"  # Align title text
     plt.tight_layout()
-    plt.subplots_adjust(hspace=0.3)
+    plt.subplots_adjust(hspace=0.3)  
     plt.show()
-    #fig.savefig("Fig_3.pdf", bbox_inches='tight')
-    plt.close("all")
+    fig.savefig("Fig_3_correctionV1.pdf", bbox_inches='tight')
+    plt.close('all')   
 
 
 def plot_bars_Vert_gap_headroom_two_subplots_doubleGlob_mod_eff_ii(
@@ -5614,7 +6544,6 @@ def plot_bars_Vert_gap_headroom_two_subplots_doubleGlob_mod_eff_ii(
     plt.tight_layout()
     plt.subplots_adjust(hspace=0.3)
     plt.show()
-    # fig.savefig('Fig2_DLSbeyond.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
     plt.close("all")
 
 
@@ -7803,7 +8732,7 @@ def plot_timing_close_DLS_gaps_converged(
     plt.tight_layout()
     plt.subplots_adjust(wspace=0, hspace=0.25)
     plt.show()
-    #fig.savefig("Fig_5.pdf", bbox_inches='tight')
+    fig.savefig("Fig_5_correctionV1.pdf", bbox_inches='tight')
     plt.close("all")
 
 

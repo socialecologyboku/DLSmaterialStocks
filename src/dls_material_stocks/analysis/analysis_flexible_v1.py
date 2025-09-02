@@ -1070,8 +1070,21 @@ def run_analysis(
         DLS_stocks_prov_noMats_regio_scale.groupby(["region", "material"]).sum()
     )
     
-
-    # clip zero here so that dictionaries regio_stocks ad regio_stock_prod are consistent (both derived from bDLS stocks calculated at resolution of reg x mat x prod)
+    # save df with negatives to count negative values and mass before clipping negatives
+    Beyond_DLS_stocks_regio_scale_materials_count_neg = (
+        pd.melt(
+            Beyond_DLS_stocks_R11_piv.reset_index(),
+            id_vars=["region", "sector"],
+            value_vars=["biomass", "fossils", "metals", "minerals"],
+            var_name="material",
+            value_name="value",
+        )
+        .set_index(["region", "sector", "material"])
+        .groupby(["region", "material"])
+        .sum()
+    )  
+    
+    # clip negatives to zero here so that dictionaries regio_stocks ad regio_stock_prod are consistent (both derived from bDLS stocks calculated at resolution of reg x mat x prod)
     Beyond_DLS_stocks_regio_scale_materials = (
         pd.melt(
             Beyond_DLS_stocks_R11_piv.clip(0).reset_index(),
@@ -1084,22 +1097,6 @@ def run_analysis(
         .groupby(["region", "material"])
         .sum()
     )
-    
-    # count negative values and mass before clipping negatives
-    Beyond_DLS_stocks_regio_scale_materials_count_neg = (
-        pd.melt(
-            Beyond_DLS_stocks_R11_piv.clip(0).reset_index(),
-            id_vars=["region", "sector"],
-            value_vars=["biomass", "fossils", "metals", "minerals"],
-            var_name="material",
-            value_name="value",
-        )
-        .set_index(["region", "sector", "material"])
-        .groupby(["region", "material"])
-        .sum()
-    )
-    
-    
 
     ##! beyond DLS stocks negative for some materials because top-down estimate of total stocks larger than bottom-up estimate of existing DLS stocks
     # negatives in terms of count and mass
@@ -1126,11 +1123,13 @@ def run_analysis(
     negative_on_positive_mass_bDLS_RM = abs(
         negative_mass_bDLS_RM / positive_mass_bDLS_RM * 100
     )
+    
+    
     # we set negative values to zero here, implying that the regional ratio of existing DLS and beyond DLS stocks is 1 and thus no beyond-DLS stock is built in 'regional ratios' scenario
-    Beyond_DLS_stocks_regio_scale_materials_count_neg[
-        Beyond_DLS_stocks_regio_scale_materials_count_neg < 0
+    Beyond_DLS_stocks_regio_scale_materials[
+        Beyond_DLS_stocks_regio_scale_materials < 0
     ] = 0
-
+    
     # calculate additional beyond-DLS stocks that would be added if regional beyond-DLS ratios are built in the future
     DLS_stocks_gap_noMats_regio_scale_materials = (
         pd.melt(
@@ -3285,19 +3284,22 @@ def run_analysis(
     plot_timing_close_DLS_gaps(
         NAS_all_histprosp, NAS_all_hist, NAS_all_prosp, scenario_summary, "total"
     )
+    
+    print( os.path.join(
+             output_path.parent, 
+             "results_data_supplement_currentgapConverged.xlsx"))
 
     # if converged scenario present, get data from a prior run (with script analysis_flexible_convGaps - required because calculations follow different logic for converged case)
     try:
         scenario_summary_converged = pd.read_excel(
             os.path.join(
-                output_path,
-                "results_data_supplement_gapConverged.xlsx",
-            ),
-            sheet_name="Fig4c_closeGap_Globscenario",
-            index_col=[0],
-            header=0,
-        ).drop(columns=["unit"])
-        # scenario_summary_converged = pd.read_excel(os.path.join(main_path, "output/results_data_supplement_gapConverged_2025-08-05.xlsx"),sheet_name="Fig5c_closeGap_Globscenario", index_col=[0], header=0).drop(columns=['unit'])
+                output_path.parent, 
+                "results_data_supplement_currentgapConverged.xlsx"),
+                sheet_name="Fig5c_closeGap_Glob_curr",
+                index_col=[0], 
+                header=0
+                ).drop(columns=['unit'])
+
         plot_timing_close_DLS_gaps_converged(
             NAS_all_histprosp,
             NAS_all_hist,
