@@ -33,8 +33,7 @@ import re
 
 
 #paths
-base_path = os.getcwd()
-main_path = os.path.dirname(base_path)
+main_path = os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd())))
 
 # Add module folder to sys.path
 module_path = os.path.join(main_path, 'load')
@@ -54,15 +53,15 @@ from DLS_functions_v3 import read_excel_into_dict, create_nested_dict, expand_ne
 input_path = os.path.join(main_path, "input/") # path to model input data
 path_to_MIs = os.path.join(input_path, "MI_comparison/") # path to material intensity data for figure S4
 path_to_popgdp = os.path.join(input_path,"MISO2/") # path to population and GDP data
-path_to_results = os.path.join(main_path, "final_results") # path to model results
-results_filename = "results_data_supplement_final_Aug425.xlsx" # model results filename
+path_to_results = os.path.join(main_path, "output") # path to model results
+results_filename = "results_data_supplement_current_converged.xlsx" # model results filename
 hhSize_path = '2021_Kikstra/DLS_household_size_version0_1_rc4_20240307.csv' # path to household size input data
 modal_share_path = 'mobility/DLS_modal_share_version0_1_rc4_20240307.csv' # path to modal share input data
 reg_diets_path = 'food/dietary-composition-by-country_OURWORLDINDATA.csv' # path to dietary share input data
-pickles_path = os.path.join(main_path, "pickles/") # path to pickled bottom up DLS stocks from pickle_runs_different_settings
+pickles_path = os.path.join(main_path, "output/scenario_data") # path to pickled bottom up DLS stocks from pickle_runs_different_settings
 
 ### load DLS thresholds per dimension (current national/regional practices)
-DLS_stocks_thresh = pd.read_pickle(os.path.join(pickles_path, "DLS_stocks_thresh_current_2025-05-09.pkl"))
+DLS_stocks_thresh = pd.read_pickle(os.path.join(pickles_path, "DLS_stocks_thresh_current.pkl"))
 
 
 
@@ -280,9 +279,10 @@ gdp.columns = gdp.columns.astype(int)
 gdp_cap_2015 = (gdp[2015]/ pop[2015])*1e6 #$2021/capta
 
 # total stocks vs. GDP
+column_header_DLSstockThresh_currentPract = '(c) DLS material stocks, threshold'
 # load stock thresholds and format
-stock_thresh_cap = pd.read_excel(os.path.join(path_to_results,results_filename), sheet_name='Fig1bc_stock_distr_countr', index_col=0)
-stock_thresh_cap = stock_thresh_cap[ 'DLS material stock threshold current practices']
+stock_thresh_cap = pd.read_excel(os.path.join(path_to_results,results_filename), sheet_name='Fig2bc_stock_distr_countr', index_col=0)
+stock_thresh_cap = stock_thresh_cap[column_header_DLSstockThresh_currentPract]
 stock_thresh_cap =  stock_thresh_cap[:-3]
 stock_vs_gdp = pd.concat([stock_thresh_cap, gdp_cap_2015],axis=1)
 # drop all which have zero GDP or missing entries
@@ -321,12 +321,13 @@ DLS_stocks_thresh_noMats.sum() /1e9
 ## obtain population data to calculate per capita stocks
 ## define main paths 
 country_correspondence_filename = 'country_correspondence.xlsx'
+
 # country corespondence MISO2 (Wiedernhofer et al., in prep.) & DLS data (Kikstra et al., 2021 updated)                    
-country_correspondence, country_correspondence_dict = load_country_correspondence_dict(country_correspondence_filename, input_path)
+country_correspondence, country_correspondence_dict = load_country_correspondence_dict(os.path.join(input_path, country_correspondence_filename))
 
 # load population data (Wiedernhofer et al., 2024) with Sudan & South Sudan aggregated to match to sytem boundaries of DLS indicators (Kikstra et al., 2021/2024)  
-MISO2_population_2015, MISO2_population_2015_subset = load_population_2015(filename='MISO2/MISO2_population.xlsx', path_name=input_path, sheet_name='values', country_correspondence=country_correspondence)
-MISO2_population =  load_population(filename='MISO2/MISO2_population.xlsx', path_name=input_path, sheet_name='values', country_correspondence=country_correspondence)
+MISO2_population_2015, MISO2_population_2015_subset = load_population_2015(filename=os.path.join(input_path, 'MISO2/MISO2_population.xlsx') ,  sheet_name='values', country_correspondence=country_correspondence)
+MISO2_population =  load_population(filename=os.path.join(input_path, 'MISO2/MISO2_population.xlsx'),sheet_name='values')
 
 #prepare population data to calculate PER CAPITA stocks
 MISO2_2015_pop_country_subset = MISO2_population_2015.reset_index()[MISO2_population_2015.reset_index()['region'].isin(DLS_stocks_thresh_noMats.reset_index()['region'].unique())].set_index('region')
@@ -343,9 +344,9 @@ DLS_stocks_thresh_noMats_country_cap.value_cap = DLS_stocks_thresh_noMats_countr
 ### total stock requirements for DLS thresholds vs. GDP
 # Create scatter plot
 plt.figure(figsize=(10,6))
-plt.scatter(stock_vs_gdp [2015], stock_vs_gdp ['DLS material stock threshold current practices'],color='blue', alpha=0.6)
+plt.scatter(stock_vs_gdp [2015], stock_vs_gdp [column_header_DLSstockThresh_currentPract],color='blue', alpha=0.6)
 # Perform linear regression to get the slope, intercept, and R² value
-slope, intercept, r_value, p_value, std_err = linregress(  stock_vs_gdp[2015],stock_vs_gdp['DLS material stock threshold current practices'])
+slope, intercept, r_value, p_value, std_err = linregress(  stock_vs_gdp[2015],stock_vs_gdp[column_header_DLSstockThresh_currentPract])
 trendline = slope *  stock_vs_gdp[2015] + intercept
 plt.plot(stock_vs_gdp[2015], trendline, color='red')
 # Add R² text to the plot (adjust the x and y positions as needed)
@@ -421,8 +422,8 @@ title_size = 14
 
 # Total stock requirements for DLS thresholds vs. GDP
 ax = axs[0, 0]
-ax.scatter(stock_vs_gdp[2015], stock_vs_gdp['DLS material stock threshold current practices'], color='blue', alpha=0.6)
-slope, intercept, r_value, p_value, std_err = linregress(stock_vs_gdp[2015], stock_vs_gdp['DLS material stock threshold current practices'])
+ax.scatter(stock_vs_gdp[2015], stock_vs_gdp[column_header_DLSstockThresh_currentPract], color='blue', alpha=0.6)
+slope, intercept, r_value, p_value, std_err = linregress(stock_vs_gdp[2015], stock_vs_gdp[column_header_DLSstockThresh_currentPract])
 trendline = slope * stock_vs_gdp[2015] + intercept
 ax.plot(stock_vs_gdp[2015], trendline, color='red')
 ax.text(400, 50, s=f'R² = {r_value**2:.2f}', fontsize=label_size, color='red')
@@ -509,7 +510,7 @@ plt.show()
 
 # Nutrition
 # load and format regional diet data (2015)
-reg_diets_act_shares_final = load_regional_diets(filename=reg_diets_path, path_name=input_path,  country_correspondence=country_correspondence, country_correspondence_dict = country_correspondence_dict)
+reg_diets_act_shares_final = load_regional_diets(filename=os.path.join(input_path, reg_diets_path),  country_correspondence=country_correspondence, country_correspondence_dict = country_correspondence_dict)
 reg_diets_act_shares_final = reg_diets_act_shares_final[reg_diets_act_shares_final.index.get_level_values(1)==2015]
 reg_diets_act_shares_meat = reg_diets_act_shares_final[['Meat, sheep and goat | 00002732 || Food available for consumption | 0664pc || kilocalories per day per capita',
 'Meat, pig | 00002733 || Food available for consumption | 0664pc || kilocalories per day per capita',
@@ -811,7 +812,7 @@ def plot_clustered_horizontal_bars(data, cols, title, base_keyword):
     
     # Get current y-axis limits
     plt.ylim(plt.ylim()[0] + 0.5, plt.ylim()[1] - 0.5)
-    plt.savefig('Streeck_ED_Fig1_' + base_keyword + '.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
+    #plt.savefig('Streeck_ED_Fig1_' + base_keyword + '.tif', format='tif', dpi =300, bbox_inches='tight', pad_inches=0)
     plt.show()
     
 plot_clustered_horizontal_bars(data[current_cols], current_cols, 'Effect of practice and technology changes on DLS stock thresholds – relative to current national/regional practices', base_keyword='current')

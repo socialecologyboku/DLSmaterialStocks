@@ -27,7 +27,7 @@ import sys
 import pandas as pd
 
 #paths
-main_path = os.path.dirname(os.getcwd())
+main_path = os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd())))
 # data paths
 input_path = os.path.join(main_path,'input')
 
@@ -49,8 +49,8 @@ module_path = os.path.join(main_path, 'module')
 if module_path not in sys.path:
     sys.path.append(module_path)
     
-from EDITS_DLS_load_data_v1 import load_country_correspondence_dict, load_population_2015, load_ew_MFA_data,load_DLS_2015
-from EDITS_DLS_functions_v3 import singleplot_predef_data_satur_bounded, singleplot_predef_data_satur_bounded_popweight
+from DLS_load_data import load_country_correspondence_dict, load_population_2015, load_ew_MFA_data,load_DLS_2015
+from DLS_functions_v3 import singleplot_predef_data_satur_bounded, singleplot_predef_data_satur_bounded_popweight
 
 
 
@@ -62,17 +62,23 @@ from EDITS_DLS_functions_v3 import singleplot_predef_data_satur_bounded, singlep
     ################################################ '''
     
 # country corespondence MISO2 (Wiedernhofer et al., 2024) & DLS data (Kikstra et al., 2021/2024)                    
-country_correspondence, country_correspondence_dict = load_country_correspondence_dict(country_correspondence_filename , input_path)
+country_correspondence, country_correspondence_dict = load_country_correspondence_dict(os.path.join(input_path, country_correspondence_filename))
 
 # load population and material stock data (Wiedernhofer et al., 2024)
-MISO2_population_2015, MISO2_population_2015_subset = load_population_2015(filename='MISO2/MISO2_population.xlsx', path_name=input_path, sheet_name='values', country_correspondence=country_correspondence)
-MISO2_stocks_GAS_2015 = load_ew_MFA_data(filename=MISO2_MFA_data_path, path_name=input_path,  country_correspondence=country_correspondence)
+MISO2_population_2015, MISO2_population_2015_subset = load_population_2015(filename=os.path.join(input_path, 'MISO2/MISO2_population.xlsx') ,  sheet_name='values', country_correspondence=country_correspondence)
+
+MISO2_stocks_GAS_2015 = load_ew_MFA_data(filename=os.path.join(input_path, MISO2_MFA_data_path), country_correspondence=country_correspondence)
 MISO2_stocks_GAS_2015.reset_index(inplace = True)
 MISO2_stocks_2015 = MISO2_stocks_GAS_2015[MISO2_stocks_GAS_2015['name'] == 'S10_stock_enduse'][['region', 'name', 'material', 'sector','2015']]      
 
 ## drop aggregates in road and civil engineering basecourses from MISO2_stocks_2015 and MISO2_stocks_GAS_2015 because too uncertain
-MISO2_stocks_2015 = MISO2_stocks_2015[~((MISO2_stocks_2015.material.isin(['aggr_virgin','aggr_downcycl'])) & (MISO2_stocks_2015.sector == 'Roads'))]  
-MISO2_stocks_2015 = MISO2_stocks_2015[~((MISO2_stocks_2015.material.isin(['aggr_virgin','aggr_downcycl'])) & (MISO2_stocks_2015.sector == 'Civil_engineering_except_roads'))]                                  
+MISO2_stocks_2015 = MISO2_stocks_2015[~((MISO2_stocks_2015.material.isin(['aggregates'])) & (MISO2_stocks_2015.sector == 'Roads'))]  
+MISO2_stocks_2015 = MISO2_stocks_2015[~((MISO2_stocks_2015.material.isin(['aggregates'])) & (MISO2_stocks_2015.sector == 'Civil_engineering_except_roads'))]                                  
+
+# add aggregates in end-uses other than roads and civil engineering to minerals
+MISO2_stocks_2015 = MISO2_stocks_2015.replace({'aggregates':'minerals'})
+MISO2_stocks_2015 = MISO2_stocks_2015.groupby(['region', 'name', 'material', 'sector']).sum().reset_index()
+
 
 # sum: stock total per country
 MISO2_stocks_2015_total = MISO2_stocks_2015.set_index(['region', 'name', 'material', 'sector']).groupby('region').sum()
@@ -99,17 +105,7 @@ MISO2_stocks_2015_cap_piv_noEndUse = MISO2_stocks_2015_cap_piv.groupby(['region'
 MISO2_stocks_2015_cap_4mats = MISO2_stocks_2015_cap.copy()
 MISO2_stocks_2015_cap_4mats = MISO2_stocks_2015_cap_4mats.reset_index().pivot(index=['region', 'sector'],\
                                                                               columns='material', values='2015') 
-
-#harmonize materials to 4 groups
-MISO2_stocks_2015_cap_4mats['biomass'] = MISO2_stocks_2015_cap_4mats[['paper','wood']].sum(axis=1)
-MISO2_stocks_2015_cap_4mats['fossils'] = MISO2_stocks_2015_cap_4mats[['bitumen','plastic']].sum(axis=1)
-MISO2_stocks_2015_cap_4mats['metals'] = MISO2_stocks_2015_cap_4mats[['aluminum', 'iron_steel', 'lead', 'manganese',
-'metals_other', 'nickel', 'zinc', 'chromium', 'copper','tin']].sum(axis=1)
-#! for minerals, we do not include  'aggr_downcycl', 'aggr_virgin' in foundations
-MISO2_stocks_2015_cap_4mats['minerals'] = MISO2_stocks_2015_cap_4mats[['asphalt', 'bricks', 'cement', 'concrete',
- 'glass_cont', 'glass_flat','aggr_virgin','aggr_downcycl']].sum(axis=1)
-MISO2_stocks_2015_cap_4mats = MISO2_stocks_2015_cap_4mats[['biomass','fossils','metals','minerals']]
-
+    
 MISO2_stocks_2015_cap_4mats_total = MISO2_stocks_2015_cap_4mats.groupby('region').sum()
 
 
@@ -123,7 +119,7 @@ MISO2_stocks_2015_cap_4mats_total = MISO2_stocks_2015_cap_4mats.groupby('region'
     
 #load DLS data (Kikstra et al., 2025 updated)   
 DLS_data_path = DLS_data_path
-DLS_2015_funct_prov, DLS_2015_thresh = load_DLS_2015(filename=DLS_data_path, path_name=input_path,  country_correspondence=country_correspondence, country_correspondence_dict = country_correspondence_dict)
+DLS_2015_funct_prov, DLS_2015_thresh = load_DLS_2015(filename=os.path.join(input_path,DLS_data_path),  country_correspondence=country_correspondence, country_correspondence_dict = country_correspondence_dict)
 
 # calculate: DLS REACHED [%] (in percent)
 DLS_reached_perc = pd.DataFrame(DLS_2015_funct_prov / DLS_2015_thresh)

@@ -34,7 +34,6 @@ parent_path = os.path.dirname(parent_path)
 input_path = os.path.join(parent_path,'input')
 
 # Path to the folder with Excel files
-#folder_path = os.path.join(parent_path,'output/DLS stock threshold divergence decomp') # only includes results from DLS stock threshold decomposition (see SI section 2.4)
 folder_path = os.path.join(parent_path,'output') # uncomment if wanna include all result outputs
 
 
